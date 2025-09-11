@@ -13,7 +13,6 @@
 
 .gif-wrapper {
   position: relative;
-  border: 1px solid #3a7a8a;
   border-radius: 2px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(42, 60, 82, 0.4);
@@ -23,7 +22,6 @@
 }
 
 .gif-wrapper:hover {
-  border-color: #5a9aaa;
   box-shadow: 0 4px 12px rgba(42, 60, 82, 0.6);
 }
 
