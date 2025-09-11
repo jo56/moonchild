@@ -69,7 +69,7 @@ function App() {
         }
       })();
       
-      // Immediately scroll to top for list and stack views
+      // Scroll to top when switching to list or stack view
       if (nextMode === 'list' || nextMode === 'stack') {
         console.log('Scrolling to top for mode:', nextMode);
         setTimeout(() => {
