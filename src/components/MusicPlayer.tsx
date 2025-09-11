@@ -15,9 +15,6 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ tracks, onLayoutToggle, viewM
   const playerRef = useRef<HTMLDivElement>(null);
   const [currentTrack, setCurrentTrack] = useState<MusicTrack | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [volume, setVolume] = useState(0.7);
-  const [progress, setProgress] = useState(0);
-  const [duration, setDuration] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   // Update position on window resize to maintain relative positioning
@@ -37,26 +34,13 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ tracks, onLayoutToggle, viewM
     const audio = audioRef.current;
     if (!audio) return;
 
-    const handleTimeUpdate = () => {
-      setProgress(audio.currentTime);
-    };
-
-    const handleLoadedMetadata = () => {
-      setDuration(audio.duration);
-    };
-
     const handleEnded = () => {
       setIsPlaying(false);
-      setProgress(0);
     };
 
-    audio.addEventListener('timeupdate', handleTimeUpdate);
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
     audio.addEventListener('ended', handleEnded);
 
     return () => {
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
       audio.removeEventListener('ended', handleEnded);
     };
   }, [currentTrack]);
@@ -89,32 +73,6 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ tracks, onLayoutToggle, viewM
     setIsPlaying(!isPlaying);
   };
 
-  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newVolume = parseFloat(e.target.value);
-    setVolume(newVolume);
-    if (audioRef.current) {
-      audioRef.current.volume = newVolume;
-    }
-  };
-
-  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const audio = audioRef.current;
-    if (!audio || !duration) return;
-
-    const rect = e.currentTarget.getBoundingClientRect();
-    const clickPosition = (e.clientX - rect.left) / rect.width;
-    const newTime = clickPosition * duration;
-    
-    audio.currentTime = newTime;
-    setProgress(newTime);
-  };
-
-  const formatTime = (time: number) => {
-    if (isNaN(time)) return '0:00';
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
 
   const handleMouseDown = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
