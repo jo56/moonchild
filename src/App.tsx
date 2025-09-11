@@ -51,12 +51,22 @@ function App() {
 
   const toggleLayout = () => {
     setViewMode(prev => {
-      switch (prev) {
-        case 'list': return 'stack';
-        case 'stack': return 'large-list';
-        case 'large-list': return 'list';
-        default: return 'list';
+      const nextMode = (() => {
+        switch (prev) {
+          case 'list': return 'stack';
+          case 'stack': return 'large-list';
+          case 'large-list': return 'list';
+          default: return 'list';
+        }
+      })();
+      
+      // Scroll to top when switching to stack view
+      if (nextMode === 'stack') {
+        //Change behavior to 'instant' to make scroll up faster
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
+      
+      return nextMode;
     });
   };
 
