@@ -180,7 +180,6 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ tracks, onLayoutToggle, viewM
       <audio 
         ref={audioRef} 
         src={currentTrack?.path} 
-        volume={volume}
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
       />

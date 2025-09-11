@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import GifDisplay from './components/GifDisplay';
 import CollageView from './components/CollageView';
 import MusicPlayer from './components/MusicPlayer';
@@ -24,9 +24,6 @@ function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
 
   const openLightbox = (gif: GifItem) => {
     setLightboxGif(gif);
