@@ -69,9 +69,13 @@ function App() {
         }
       })();
       
-      // Scroll to top when switching to list or stack view
-      if (nextMode === 'list' || nextMode === 'stack') {
-        console.log('Scrolling to top for mode:', nextMode);
+      // Scroll to top when switching to stack view (original behavior)
+      if (nextMode === 'stack') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      
+      // Scroll to top when switching to list view (new behavior)
+      if (nextMode === 'list') {
         setTimeout(() => {
           document.documentElement.scrollTop = 0;
           document.body.scrollTop = 0;
