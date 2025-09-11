@@ -15,14 +15,8 @@
   position: relative;
   border-radius: 2px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(42, 60, 82, 0.4);
-  transition: all 0.2s ease;
   background: #0a1628;
   cursor: pointer;
-}
-
-.gif-wrapper:hover {
-  box-shadow: 0 4px 12px rgba(42, 60, 82, 0.6);
 }
 
 .gif-image {
