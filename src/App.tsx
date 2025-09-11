@@ -12,6 +12,7 @@ function App() {
   const [lightboxGif, setLightboxGif] = useState<GifItem | null>(null);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'stack' | 'large-list'>('list');
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -23,6 +24,14 @@ function App() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Scroll to top on initial load
+  useEffect(() => {
+    if (isInitialLoad) {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      setIsInitialLoad(false);
+    }
+  }, [isInitialLoad]);
 
 
   const openLightbox = (gif: GifItem) => {
@@ -60,15 +69,20 @@ function App() {
         }
       })();
       
-      // Scroll to top when switching to stack view
-      if (nextMode === 'stack') {
-        //Change behavior to 'instant' to make scroll up faster
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Immediately scroll to top for list and stack views
+      if (nextMode === 'list' || nextMode === 'stack') {
+        console.log('Scrolling to top for mode:', nextMode);
+        setTimeout(() => {
+          document.documentElement.scrollTop = 0;
+          document.body.scrollTop = 0;
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }, 50);
       }
       
       return nextMode;
     });
   };
+
 
   return (
     <div className="app">
