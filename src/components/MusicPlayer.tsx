@@ -70,6 +70,13 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ tracks, onLayoutToggle, viewM
     }
   };
 
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio && currentTrack && isPlaying) {
+      audio.play().catch(console.error);
+    }
+  }, [currentTrack]);
+
   const togglePlayPause = () => {
     const audio = audioRef.current;
     if (!audio || !currentTrack) return;
