@@ -200,7 +200,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ tracks, onLayoutToggle, viewM
 
       <div className="layout-toggle">
         <button className="toggle-btn" onClick={onLayoutToggle}>
-          {viewMode === 'list' ? '⧨' : viewMode === 'stack' ? '⧩' : '⧪'}
+          {viewMode === 'list' ? '⧪' : viewMode === 'stack' ? '⧮' : '☰'}
         </button>
       </div>
 
