@@ -35,7 +35,7 @@
   align-items: center;
   width: 40px;
   height: 40px;
-  background: #000;
+  background: #0a1628;
   border: none;
   border-radius: 0;
   cursor: pointer;
@@ -51,9 +51,9 @@
 }
 
 .track-item.active {
-  background: #000;
+  background: #0a1628;
   opacity: 1;
-  border: 1px solid #000;
+  border: 1px solid #0a1628;
 }
 
 
@@ -74,7 +74,7 @@
 .toggle-btn {
   width: 82px;
   height: 40px;
-  background: #000;
+  background: #0a1628;
   border: none;
   border-radius: 0;
   color: #06B6D4;
