@@ -204,29 +204,31 @@
   border-radius: 50%;
   box-shadow: 0 0 4px #00ffff;
   animation: float 20s infinite linear;
+  opacity: 0;
+  animation-delay: 2s;
 }
 
 .floating-particle:nth-child(1) {
   left: 10%;
-  animation-delay: 0s;
+  animation-delay: 2s;
   animation-duration: 25s;
 }
 
 .floating-particle:nth-child(2) {
   left: 30%;
-  animation-delay: 5s;
+  animation-delay: 7s;
   animation-duration: 30s;
 }
 
 .floating-particle:nth-child(3) {
   left: 70%;
-  animation-delay: 10s;
+  animation-delay: 12s;
   animation-duration: 20s;
 }
 
 .floating-particle:nth-child(4) {
   left: 90%;
-  animation-delay: 15s;
+  animation-delay: 17s;
   animation-duration: 35s;
 }
 
@@ -256,7 +258,7 @@
 @keyframes float {
   0% {
     transform: translateY(100vh) rotate(0deg);
-    opacity: 0;
+    opacity: 1;
   }
   10% {
     opacity: 1;
