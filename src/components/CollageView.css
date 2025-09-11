@@ -1,0 +1,368 @@
+.collage-container {
+  width: 100%;
+  min-height: 100vh;
+  background: #0a1628;
+  padding: 2rem;
+}
+
+.collage-grid {
+  position: relative;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  height: 100vh;
+}
+
+.collage-item {
+  position: absolute;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.collage-item:hover {
+  z-index: 10;
+  transform: scale(1.05);
+}
+
+.collage-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.collage-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(10, 22, 40, 0.9);
+  border-top: 1px solid #3a7a8a;
+  padding: 0.75rem;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  font-family: 'Courier New', monospace;
+}
+
+.collage-item:hover .collage-overlay {
+  opacity: 1;
+}
+
+.collage-title {
+  font-size: 0.7rem;
+  font-weight: normal;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin: 0;
+  color: #5a9aaa;
+  font-family: 'Courier New', monospace;
+}
+
+/* Specific positioning for each image */
+.collage-item-1 {
+  top: 5%;
+  left: 10%;
+  width: 25%;
+  height: 30%;
+}
+
+.collage-item-2 {
+  top: 8%;
+  right: 15%;
+  width: 20%;
+  height: 25%;
+}
+
+.collage-item-3 {
+  top: 40%;
+  left: 5%;
+  width: 30%;
+  height: 20%;
+}
+
+.collage-item-4 {
+  top: 15%;
+  left: 40%;
+  width: 18%;
+  height: 35%;
+}
+
+.collage-item-5 {
+  top: 35%;
+  right: 8%;
+  width: 22%;
+  height: 28%;
+}
+
+.collage-item-6 {
+  bottom: 15%;
+  left: 35%;
+  width: 28%;
+  height: 22%;
+}
+
+.collage-item-7 {
+  bottom: 25%;
+  right: 20%;
+  width: 16%;
+  height: 20%;
+}
+
+.collage-item-8 {
+  bottom: 8%;
+  left: 8%;
+  width: 20%;
+  height: 18%;
+}
+
+/* Small collage - tightly packed, maximized */
+.collage-item-safe-1 {
+  top: 5%;
+  left: 5%;
+  width: 30%;
+  height: 22%;
+  transform: rotate(-1deg);
+}
+
+.collage-item-safe-2 {
+  top: 8%;
+  left: 32%;
+  width: 28%;
+  height: 20%;
+  transform: rotate(2deg);
+}
+
+.collage-item-safe-3 {
+  top: 6%;
+  right: 5%;
+  width: 32%;
+  height: 21%;
+  transform: rotate(-2deg);
+}
+
+.collage-item-safe-4 {
+  top: 30%;
+  left: 3%;
+  width: 31%;
+  height: 24%;
+  transform: rotate(1deg);
+}
+
+.collage-item-safe-5 {
+  top: 32%;
+  left: 33%;
+  width: 29%;
+  height: 23%;
+  transform: rotate(-1deg);
+}
+
+.collage-item-safe-6 {
+  top: 31%;
+  right: 3%;
+  width: 33%;
+  height: 22%;
+  transform: rotate(2deg);
+}
+
+.collage-item-safe-7 {
+  bottom: 8%;
+  left: 8%;
+  width: 40%;
+  height: 18%;
+  transform: rotate(-1deg);
+}
+
+.collage-item-safe-8 {
+  bottom: 6%;
+  right: 8%;
+  width: 42%;
+  height: 19%;
+  transform: rotate(1deg);
+}
+
+/* New large collage - original sizes with bi-directional scroll */
+.large-collage {
+  padding: 2rem;
+  min-height: 100vh;
+  overflow: auto;
+}
+
+.large-collage .collage-grid {
+  position: relative;
+  width: 600vw;
+  height: 400vh;
+  min-width: 8000px;
+  min-height: 4000px;
+}
+
+.large-item {
+  position: absolute !important;
+  width: auto !important;
+  height: auto !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+}
+
+.large-item .collage-image {
+  width: auto;
+  height: auto;
+  object-fit: none;
+  max-width: none;
+  max-height: none;
+}
+
+/* Large collage irregular positioning - original sizes, well spread */
+.large-item-1 {
+  top: 5%;
+  left: 3%;
+  transform: rotate(-1deg);
+}
+
+.large-item-2 {
+  top: 8%;
+  left: 25%;
+  transform: rotate(2deg);
+}
+
+.large-item-3 {
+  top: 35%;
+  left: 8%;
+  transform: rotate(-2deg);
+}
+
+.large-item-4 {
+  top: 12%;
+  left: 55%;
+  transform: rotate(1deg);
+}
+
+.large-item-5 {
+  top: 50%;
+  left: 35%;
+  transform: rotate(-1deg);
+}
+
+.large-item-6 {
+  top: 25%;
+  left: 78%;
+  transform: rotate(3deg);
+}
+
+.large-item-7 {
+  top: 65%;
+  left: 65%;
+  transform: rotate(-2deg);
+}
+
+.large-item-8 {
+  top: 75%;
+  left: 15%;
+  transform: rotate(1deg);
+}
+
+/* Stack view - simple vertical list with massive images */
+.stack-collage {
+  padding: 2rem;
+  min-height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.stack-collage .collage-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+  align-items: center;
+  width: 100%;
+  padding-bottom: 2rem;
+}
+
+.stack-item {
+  position: relative !important;
+  width: auto !important;
+  height: auto !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  flex-shrink: 0;
+}
+
+.stack-item .collage-image {
+  width: auto;
+  height: auto;
+  object-fit: none;
+  max-width: none;
+  max-height: none;
+  display: block;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .collage-container {
+    padding: 1rem;
+  }
+  
+  .collage-grid {
+    height: 120vh;
+  }
+  
+  .collage-item-1 {
+    top: 2%;
+    left: 5%;
+    width: 40%;
+    height: 20%;
+  }
+
+  .collage-item-2 {
+    top: 5%;
+    right: 10%;
+    width: 35%;
+    height: 18%;
+  }
+
+  .collage-item-3 {
+    top: 25%;
+    left: 10%;
+    width: 45%;
+    height: 15%;
+  }
+
+  .collage-item-4 {
+    top: 30%;
+    right: 5%;
+    width: 30%;
+    height: 25%;
+  }
+
+  .collage-item-5 {
+    top: 45%;
+    left: 5%;
+    width: 35%;
+    height: 20%;
+  }
+
+  .collage-item-6 {
+    top: 58%;
+    right: 8%;
+    width: 40%;
+    height: 18%;
+  }
+
+  .collage-item-7 {
+    top: 70%;
+    left: 8%;
+    width: 30%;
+    height: 15%;
+  }
+
+  .collage-item-8 {
+    bottom: 5%;
+    right: 10%;
+    width: 35%;
+    height: 12%;
+  }
+}
