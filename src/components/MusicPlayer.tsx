@@ -192,7 +192,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ tracks, onLayoutToggle, viewM
             onClick={() => playTrack(track)}
           >
             <div className="track-controls">
-              {currentTrack?.id === track.id && isPlaying ? '⏸' : '▶'}
+              {currentTrack?.id === track.id && isPlaying ? '■' : '▶'}
             </div>
           </div>
         ))}
@@ -200,45 +200,10 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ tracks, onLayoutToggle, viewM
 
       <div className="layout-toggle">
         <button className="toggle-btn" onClick={onLayoutToggle}>
-          {viewMode === 'list' ? 'STACK' : viewMode === 'stack' ? 'LARGE LIST' : 'LIST'}
+          {viewMode === 'list' ? '⧨' : viewMode === 'stack' ? '⧩' : '⧪'}
         </button>
       </div>
 
-      {currentTrack && (
-        <div className="player-controls">
-          <div className="now-playing">
-            <span>Now playing: {currentTrack.name}</span>
-          </div>
-          
-          <div className="progress-container">
-            <span className="time">{formatTime(progress)}</span>
-            <div className="progress-bar" onClick={handleProgressClick}>
-              <div 
-                className="progress-fill"
-                style={{ width: duration ? `${(progress / duration) * 100}%` : '0%' }}
-              />
-            </div>
-            <span className="time">{formatTime(duration)}</span>
-          </div>
-
-          <div className="volume-container">
-            <span>🔊</span>
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.1"
-              value={volume}
-              onChange={handleVolumeChange}
-              className="volume-slider"
-            />
-          </div>
-
-          <button className="play-pause-btn" onClick={togglePlayPause}>
-            {isPlaying ? '⏸ Pause' : '▶ Play'}
-          </button>
-        </div>
-      )}
     </div>
   );
 };
