@@ -40,15 +40,18 @@
   object-fit: contain;
   border-radius: 0;
   animation: scaleIn 0.3s ease-out;
-  transition: transform 0.3s ease, cursor 0.2s ease;
+  transition: cursor 0.2s ease;
   cursor: zoom-in;
 }
 
 .lightbox-image.zoomed {
-  transform: scale(2);
-  cursor: zoom-out;
   max-width: none;
   max-height: none;
+}
+
+.lightbox-image.dragging {
+  user-select: none;
+  transition: none;
 }
 
 
