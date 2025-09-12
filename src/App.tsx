@@ -108,13 +108,12 @@ function App() {
         style={{ width: `${scrollProgress}%` }}
       />
       
-{isMusicPlayerVisible && (
-        <MusicPlayer 
-          tracks={musicTracks} 
-          onLayoutToggle={toggleLayout}
-          viewMode={viewMode}
-        />
-      )}
+<MusicPlayer 
+        tracks={musicTracks} 
+        onLayoutToggle={toggleLayout}
+        viewMode={viewMode}
+        isVisible={isMusicPlayerVisible}
+      />
       
       <main className="main-content">
         {viewMode === 'list' ? (

@@ -6,9 +6,10 @@ interface MusicPlayerProps {
   tracks: MusicTrack[];
   onLayoutToggle: () => void;
   viewMode: 'list' | 'stack' | 'large-list';
+  isVisible?: boolean;
 }
 
-const MusicPlayer: React.FC<MusicPlayerProps> = ({ tracks, onLayoutToggle, viewMode }) => {
+const MusicPlayer: React.FC<MusicPlayerProps> = ({ tracks, onLayoutToggle, viewMode, isVisible = true }) => {
   const [position, setPosition] = useState({ x: window.innerWidth - 180, y: 20 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -132,16 +133,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ tracks, onLayoutToggle, viewM
   }, [isDragging, dragStart, position]);
 
   return (
-    <div 
-      ref={playerRef}
-      className={`music-player ${isDragging ? 'dragging' : ''}`}
-      style={{ 
-        left: position.x, 
-        top: position.y,
-        cursor: isDragging ? 'grabbing' : 'grab'
-      }}
-      onMouseDown={handleMouseDown}
-    >
+    <>
       <audio 
         ref={audioRef} 
         src={currentTrack?.path} 
@@ -150,27 +142,39 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ tracks, onLayoutToggle, viewM
         onPause={() => setIsPlaying(false)}
       />
       
-      <div className="track-list">
-        {tracks.map((track) => (
-          <div 
-            key={track.id}
-            className={`track-item ${currentTrack?.id === track.id ? 'active' : ''}`}
-            onClick={() => playTrack(track)}
-          >
-            <div className="track-controls">
-              {currentTrack?.id === track.id && isPlaying ? '■' : '▶'}
-            </div>
+      {isVisible && (
+        <div 
+          ref={playerRef}
+          className={`music-player ${isDragging ? 'dragging' : ''}`}
+          style={{ 
+            left: position.x, 
+            top: position.y,
+            cursor: isDragging ? 'grabbing' : 'grab'
+          }}
+          onMouseDown={handleMouseDown}
+        >
+          <div className="track-list">
+            {tracks.map((track) => (
+              <div 
+                key={track.id}
+                className={`track-item ${currentTrack?.id === track.id ? 'active' : ''}`}
+                onClick={() => playTrack(track)}
+              >
+                <div className="track-controls">
+                  {currentTrack?.id === track.id && isPlaying ? '■' : '▶'}
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
 
-      <div className="layout-toggle">
-        <button className="toggle-btn" onClick={onLayoutToggle}>
-          {viewMode === 'list' ? '⧪' : viewMode === 'stack' ? '⧮' : '☰'}
-        </button>
-      </div>
-
-    </div>
+          <div className="layout-toggle">
+            <button className="toggle-btn" onClick={onLayoutToggle}>
+              {viewMode === 'list' ? '⧪' : viewMode === 'stack' ? '⧮' : '☰'}
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
