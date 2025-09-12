@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import GifDisplay from './components/GifDisplay';
 import CollageView from './components/CollageView';
 import PinterestGallery from './components/PinterestGallery';
+import IrregularCollage from './components/IrregularCollage';
 import MusicPlayer from './components/MusicPlayer';
 import Lightbox from './components/Lightbox';
 import { gifs, musicTracks, combinedMedia } from './data';
@@ -12,7 +13,7 @@ function App() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [lightboxGif, setLightboxGif] = useState<GifItem | null>(null);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<'list' | 'stack' | 'large-list' | 'pinterest'>('pinterest');
+  const [viewMode, setViewMode] = useState<'list' | 'stack' | 'large-list' | 'pinterest' | 'irregular'>('pinterest');
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [isMusicPlayerVisible, setIsMusicPlayerVisible] = useState(true);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -85,7 +86,7 @@ function App() {
 
   const showNextGif = () => {
     if (!lightboxGif) return;
-    const currentArray = viewMode === 'pinterest' ? combinedMedia : gifs;
+    const currentArray = (viewMode === 'pinterest' || viewMode === 'irregular') ? combinedMedia : gifs;
     const currentIndex = currentArray.findIndex(g => g.id === lightboxGif.id);
     const nextIndex = (currentIndex + 1) % currentArray.length;
     const nextItem = currentArray[nextIndex];
@@ -94,7 +95,7 @@ function App() {
 
   const showPreviousGif = () => {
     if (!lightboxGif) return;
-    const currentArray = viewMode === 'pinterest' ? combinedMedia : gifs;
+    const currentArray = (viewMode === 'pinterest' || viewMode === 'irregular') ? combinedMedia : gifs;
     const currentIndex = currentArray.findIndex(g => g.id === lightboxGif.id);
     const previousIndex = (currentIndex - 1 + currentArray.length) % currentArray.length;
     const prevItem = currentArray[previousIndex];
@@ -108,7 +109,8 @@ function App() {
           case 'list': return 'stack';
           case 'stack': return 'large-list';
           case 'large-list': return 'pinterest';
-          case 'pinterest': return 'list';
+          case 'pinterest': return 'irregular';
+          case 'irregular': return 'list';
           default: return 'list';
         }
       })();
@@ -129,6 +131,11 @@ function App() {
       
       // Scroll to top when switching to pinterest view
       if (nextMode === 'pinterest') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      
+      // Scroll to top when switching to irregular collage view
+      if (nextMode === 'irregular') {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
       
@@ -174,6 +181,11 @@ function App() {
           />
         ) : viewMode === 'pinterest' ? (
           <PinterestGallery 
+            media={combinedMedia}
+            onMediaClick={handleMediaClick}
+          />
+        ) : viewMode === 'irregular' ? (
+          <IrregularCollage 
             media={combinedMedia}
             onMediaClick={handleMediaClick}
           />

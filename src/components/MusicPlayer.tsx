@@ -5,7 +5,7 @@ import './MusicPlayer.css';
 interface MusicPlayerProps {
   tracks: MusicTrack[];
   onLayoutToggle: () => void;
-  viewMode: 'list' | 'stack' | 'large-list' | 'pinterest';
+  viewMode: 'list' | 'stack' | 'large-list' | 'pinterest' | 'irregular';
   isVisible?: boolean;
   mousePosition: { x: number; y: number };
   onDismiss: () => void;
