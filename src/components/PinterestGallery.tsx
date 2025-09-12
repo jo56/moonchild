@@ -101,8 +101,7 @@ const PinterestGallery: React.FC<PinterestGalleryProps> = ({ media, onMediaClick
                 key={item.id}
                 className="pinterest-item"
                 style={{
-                  height: `${item.height}px`,
-                  animationDelay: `${(columnIndex * getColumnItems(columnIndex).length + index) * 0.1}s`
+                  height: `${item.height}px`
                 }}
                 onClick={() => handleMediaClick(item)}
               >
