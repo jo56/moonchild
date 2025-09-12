@@ -26,6 +26,8 @@ const IrregularCollage: React.FC<IrregularCollageProps> = ({ media, onMediaClick
   const [viewportOffset, setViewportOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
+  const [hasDragged, setHasDragged] = useState(false);
 
   const shuffleArray = useCallback(<T,>(array: T[]): T[] => {
     const shuffled = [...array];
@@ -221,16 +223,23 @@ const IrregularCollage: React.FC<IrregularCollageProps> = ({ media, onMediaClick
 
   // Viewport navigation handlers
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    // Only start panning if clicking on the background, not on an image
-    if ((e.target as HTMLElement).classList.contains('irregular-collage')) {
-      setIsDragging(true);
-      setDragStart({ x: e.clientX - viewportOffset.x, y: e.clientY - viewportOffset.y });
-      e.preventDefault();
-    }
+    // Allow dragging from anywhere in the collage (background or images)
+    setIsDragging(true);
+    setDragStart({ x: e.clientX - viewportOffset.x, y: e.clientY - viewportOffset.y });
+    setDragStartPos({ x: e.clientX, y: e.clientY });
+    setHasDragged(false);
+    e.preventDefault();
   }, [viewportOffset]);
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isDragging) return;
+    
+    // Check if we've moved enough to be considered a drag (5px threshold)
+    const deltaX = Math.abs(e.clientX - dragStartPos.x);
+    const deltaY = Math.abs(e.clientY - dragStartPos.y);
+    if (deltaX > 5 || deltaY > 5) {
+      setHasDragged(true);
+    }
     
     const newOffset = {
       x: e.clientX - dragStart.x,
@@ -245,7 +254,7 @@ const IrregularCollage: React.FC<IrregularCollageProps> = ({ media, onMediaClick
       x: Math.max(maxOffsetX, Math.min(0, newOffset.x)),
       y: Math.max(maxOffsetY, Math.min(0, newOffset.y))
     });
-  }, [isDragging, dragStart, containerWidth, containerHeight]);
+  }, [isDragging, dragStart, dragStartPos, containerWidth, containerHeight]);
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
@@ -291,9 +300,13 @@ const IrregularCollage: React.FC<IrregularCollageProps> = ({ media, onMediaClick
             zIndex: item.zIndex,
             opacity: 1
           }}
+          onMouseDown={handleMouseDown}
           onClick={(e) => {
-            e.stopPropagation();
-            onMediaClick(item);
+            // Only trigger media click if we weren't dragging
+            if (!hasDragged) {
+              e.stopPropagation();
+              onMediaClick(item);
+            }
           }}
         >
           <img

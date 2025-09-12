@@ -66,22 +66,22 @@ function App() {
       const nextMode = (() => {
         if (direction === 'backward') {
           switch (prev) {
-            case 'list': return 'irregular';
+            case 'list': return 'pinterest';
             case 'stack': return 'list';
             case 'large-list': return 'stack';
-            case 'pics-only': return 'large-list';
+            case 'irregular': return 'large-list';
+            case 'pics-only': return 'irregular';
             case 'pinterest': return 'pics-only';
-            case 'irregular': return 'pinterest';
             default: return 'list';
           }
         } else {
           switch (prev) {
             case 'list': return 'stack';
             case 'stack': return 'large-list';
-            case 'large-list': return 'pics-only';
+            case 'large-list': return 'irregular';
+            case 'irregular': return 'pics-only';
             case 'pics-only': return 'pinterest';
-            case 'pinterest': return 'irregular';
-            case 'irregular': return 'list';
+            case 'pinterest': return 'list';
             default: return 'list';
           }
         }
