@@ -230,12 +230,14 @@ function App() {
         )}
       </main>
 
-      <div className="ambient-effects">
-        <div className="floating-particle"></div>
-        <div className="floating-particle"></div>
-        <div className="floating-particle"></div>
-        <div className="floating-particle"></div>
-      </div>
+      {viewMode !== 'pics-only' && (
+        <div className="ambient-effects">
+          <div className="floating-particle"></div>
+          <div className="floating-particle"></div>
+          <div className="floating-particle"></div>
+          <div className="floating-particle"></div>
+        </div>
+      )}
 
       <Lightbox 
         gif={lightboxGif}

@@ -17,20 +17,14 @@ const StaticImageDisplay: React.FC<StaticImageDisplayProps> = ({ image, index, o
   return (
     <div 
       className={`gif-container ${index % 2 === 0 ? 'left-align' : 'right-align'}`}
-      style={{
-        animationDelay: `${index * 0.5}s`
-      }}
     >
       <div className="gif-wrapper" onClick={onClick}>
         <img 
           src={image.path} 
-          alt={image.name}
+          alt=""
           className="gif-image"
           loading="lazy"
         />
-        <div className="gif-overlay">
-          <h3 className="gif-title">{image.name}</h3>
-        </div>
       </div>
     </div>
   );
