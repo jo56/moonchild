@@ -96,7 +96,7 @@ const PinterestGallery: React.FC<PinterestGalleryProps> = ({ media, onMediaClick
       <div className="pinterest-columns" style={{ '--columns': columns } as React.CSSProperties}>
         {Array.from({ length: columns }, (_, columnIndex) => (
           <div key={columnIndex} className="pinterest-column">
-            {getColumnItems(columnIndex).map((item, index) => (
+            {getColumnItems(columnIndex).map((item) => (
               <div 
                 key={item.id}
                 className="pinterest-item"

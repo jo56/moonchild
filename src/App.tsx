@@ -3,9 +3,10 @@ import GifDisplay from './components/GifDisplay';
 import CollageView from './components/CollageView';
 import PinterestGallery from './components/PinterestGallery';
 import IrregularCollage from './components/IrregularCollage';
+import StaticImageDisplay from './components/StaticImageDisplay';
 import MusicPlayer from './components/MusicPlayer';
 import Lightbox from './components/Lightbox';
-import { gifs, musicTracks, combinedMedia } from './data';
+import { gifs, musicTracks, combinedMedia, staticImages } from './data';
 import { GifItem, MediaItem } from './types';
 import './App.css';
 
@@ -13,7 +14,7 @@ function App() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [lightboxGif, setLightboxGif] = useState<GifItem | null>(null);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<'list' | 'stack' | 'large-list' | 'pinterest' | 'irregular'>('pinterest');
+  const [viewMode, setViewMode] = useState<'list' | 'stack' | 'large-list' | 'pinterest' | 'irregular' | 'pics-only'>('pinterest');
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [isMusicPlayerVisible, setIsMusicPlayerVisible] = useState(true);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -86,7 +87,14 @@ function App() {
 
   const showNextGif = () => {
     if (!lightboxGif) return;
-    const currentArray = (viewMode === 'pinterest' || viewMode === 'irregular') ? combinedMedia : gifs;
+    let currentArray;
+    if (viewMode === 'pinterest' || viewMode === 'irregular') {
+      currentArray = combinedMedia;
+    } else if (viewMode === 'pics-only') {
+      currentArray = staticImages;
+    } else {
+      currentArray = gifs;
+    }
     const currentIndex = currentArray.findIndex(g => g.id === lightboxGif.id);
     const nextIndex = (currentIndex + 1) % currentArray.length;
     const nextItem = currentArray[nextIndex];
@@ -95,7 +103,14 @@ function App() {
 
   const showPreviousGif = () => {
     if (!lightboxGif) return;
-    const currentArray = (viewMode === 'pinterest' || viewMode === 'irregular') ? combinedMedia : gifs;
+    let currentArray;
+    if (viewMode === 'pinterest' || viewMode === 'irregular') {
+      currentArray = combinedMedia;
+    } else if (viewMode === 'pics-only') {
+      currentArray = staticImages;
+    } else {
+      currentArray = gifs;
+    }
     const currentIndex = currentArray.findIndex(g => g.id === lightboxGif.id);
     const previousIndex = (currentIndex - 1 + currentArray.length) % currentArray.length;
     const prevItem = currentArray[previousIndex];
@@ -108,7 +123,8 @@ function App() {
         switch (prev) {
           case 'list': return 'stack';
           case 'stack': return 'large-list';
-          case 'large-list': return 'pinterest';
+          case 'large-list': return 'pics-only';
+          case 'pics-only': return 'pinterest';
           case 'pinterest': return 'irregular';
           case 'irregular': return 'list';
           default: return 'list';
@@ -136,6 +152,11 @@ function App() {
       
       // Scroll to top when switching to irregular collage view
       if (nextMode === 'irregular') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      
+      // Scroll to top when switching to pics-only view
+      if (nextMode === 'pics-only') {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
       
@@ -189,6 +210,17 @@ function App() {
             media={combinedMedia}
             onMediaClick={handleMediaClick}
           />
+        ) : viewMode === 'pics-only' ? (
+          <section className="gallery-section">
+            {staticImages.map((image, index) => (
+              <StaticImageDisplay 
+                key={image.id} 
+                image={image} 
+                index={index} 
+                onClick={() => openLightbox({ id: image.id, name: image.name, path: image.path })}
+              />
+            ))}
+          </section>
         ) : (
           <CollageView 
             gifs={gifs} 
