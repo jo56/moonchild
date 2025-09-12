@@ -204,8 +204,8 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ tracks, onLayoutToggle, viewM
             <button className="toggle-btn" onClick={onLayoutToggle}>
               {viewMode === 'list' ? '⧪' : 
                viewMode === 'stack' ? '⧮' : 
-               viewMode === 'large-list' ? '▥' : 
-               viewMode === 'irregular' ? '▦' : 
+               viewMode === 'large-list' ? '▦' : 
+               viewMode === 'irregular' ? '⧻' : 
                viewMode === 'pics-only' ? '◈' : 
                viewMode === 'pinterest' ? '☰' : '☰'}
             </button>
