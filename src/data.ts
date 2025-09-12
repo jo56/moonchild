@@ -23,7 +23,6 @@ export const staticImages = [
   { id: 'img9', name: 'Electric Symphony', path: 'pics/download (29).png' },
   { id: 'img10', name: 'Crystal Formation', path: 'pics/download (30).png' },
   { id: 'img11', name: 'Quantum Field', path: 'pics/download (31).png' },
-  { id: 'img12', name: 'Prism Light', path: 'pics/download (32).png' },
   { id: 'img13', name: 'Void Echo', path: 'pics/download (34).png' },
   { id: 'img14', name: 'Fractal Bloom', path: 'pics/download (35).png' },
   { id: 'img15', name: 'Celestial Burst', path: 'pics/download (36).png' },
