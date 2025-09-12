@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { GifItem } from '../types';
 import './Lightbox.css';
 
@@ -11,13 +11,19 @@ interface LightboxProps {
 }
 
 const Lightbox: React.FC<LightboxProps> = ({ gif, isOpen, onClose, onNext, onPrevious }) => {
+  const [isZoomed, setIsZoomed] = useState(false);
+  
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isOpen) return;
       
       switch (e.key) {
         case 'Escape':
-          onClose();
+          if (isZoomed) {
+            setIsZoomed(false);
+          } else {
+            onClose();
+          }
           break;
       }
     };
@@ -34,18 +40,28 @@ const Lightbox: React.FC<LightboxProps> = ({ gif, isOpen, onClose, onNext, onPre
       document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = '';
     };
-  }, [isOpen, onClose, onNext, onPrevious]);
+  }, [isOpen, isZoomed, onClose, onNext, onPrevious]);
+
+  // Reset zoom when gif changes
+  useEffect(() => {
+    setIsZoomed(false);
+  }, [gif]);
 
   if (!isOpen || !gif) return null;
 
   return (
-    <div className="lightbox-overlay" onClick={onClose}>
+    <div 
+      className="lightbox-overlay" 
+      onClick={isZoomed ? () => setIsZoomed(false) : onClose}
+    >
       <div className="lightbox-container" onClick={(e) => e.stopPropagation()}>
         <div className="lightbox-content">
           <img 
             src={gif.path} 
             alt={gif.name}
-            className="lightbox-image"
+            className={`lightbox-image ${isZoomed ? 'zoomed' : ''}`}
+            onClick={() => setIsZoomed(!isZoomed)}
+            style={{ cursor: 'zoom-in' }}
           />
         </div>
       </div>

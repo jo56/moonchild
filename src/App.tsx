@@ -13,6 +13,7 @@ function App() {
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'stack' | 'large-list'>('list');
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [isMusicPlayerVisible, setIsMusicPlayerVisible] = useState(true);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -32,6 +33,18 @@ function App() {
       setIsInitialLoad(false);
     }
   }, [isInitialLoad]);
+
+  // Handle shift key toggle for music player
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Shift' && !isLightboxOpen) {
+        setIsMusicPlayerVisible(prev => !prev);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isLightboxOpen]);
 
 
   const openLightbox = (gif: GifItem) => {
@@ -95,11 +108,13 @@ function App() {
         style={{ width: `${scrollProgress}%` }}
       />
       
-      <MusicPlayer 
-        tracks={musicTracks} 
-        onLayoutToggle={toggleLayout}
-        viewMode={viewMode}
-      />
+{isMusicPlayerVisible && (
+        <MusicPlayer 
+          tracks={musicTracks} 
+          onLayoutToggle={toggleLayout}
+          viewMode={viewMode}
+        />
+      )}
       
       <main className="main-content">
         {viewMode === 'list' ? (
