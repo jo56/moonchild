@@ -61,6 +61,81 @@ function App() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isLightboxOpen]);
 
+  const toggleLayout = (direction: 'forward' | 'backward' = 'forward') => {
+    setViewMode(prev => {
+      const nextMode = (() => {
+        if (direction === 'backward') {
+          switch (prev) {
+            case 'list': return 'irregular';
+            case 'stack': return 'list';
+            case 'large-list': return 'stack';
+            case 'pics-only': return 'large-list';
+            case 'pinterest': return 'pics-only';
+            case 'irregular': return 'pinterest';
+            default: return 'list';
+          }
+        } else {
+          switch (prev) {
+            case 'list': return 'stack';
+            case 'stack': return 'large-list';
+            case 'large-list': return 'pics-only';
+            case 'pics-only': return 'pinterest';
+            case 'pinterest': return 'irregular';
+            case 'irregular': return 'list';
+            default: return 'list';
+          }
+        }
+      })();
+      
+      // Scroll to top when switching to stack view (original behavior)
+      if (nextMode === 'stack') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      
+      // Scroll to top when switching to list view (new behavior)
+      if (nextMode === 'list') {
+        setTimeout(() => {
+          document.documentElement.scrollTop = 0;
+          document.body.scrollTop = 0;
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }, 50);
+      }
+      
+      // Scroll to top when switching to pinterest view
+      if (nextMode === 'pinterest') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      
+      // Scroll to top when switching to irregular collage view
+      if (nextMode === 'irregular') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      
+      // Scroll to top when switching to pics-only view
+      if (nextMode === 'pics-only') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      
+      return nextMode;
+    });
+  };
+
+  // Handle A/D and arrow keys for layout navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (isLightboxOpen) return;
+      
+      if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') {
+        toggleLayout('backward');
+      } else if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') {
+        toggleLayout('forward');
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isLightboxOpen, toggleLayout]);
+
 
   const openLightbox = (gif: GifItem) => {
     setLightboxGif(gif);
@@ -117,53 +192,6 @@ function App() {
     setLightboxGif({ id: prevItem.id, name: prevItem.name, path: prevItem.path });
   };
 
-  const toggleLayout = () => {
-    setViewMode(prev => {
-      const nextMode = (() => {
-        switch (prev) {
-          case 'list': return 'stack';
-          case 'stack': return 'large-list';
-          case 'large-list': return 'pics-only';
-          case 'pics-only': return 'pinterest';
-          case 'pinterest': return 'irregular';
-          case 'irregular': return 'list';
-          default: return 'list';
-        }
-      })();
-      
-      // Scroll to top when switching to stack view (original behavior)
-      if (nextMode === 'stack') {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-      
-      // Scroll to top when switching to list view (new behavior)
-      if (nextMode === 'list') {
-        setTimeout(() => {
-          document.documentElement.scrollTop = 0;
-          document.body.scrollTop = 0;
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }, 50);
-      }
-      
-      // Scroll to top when switching to pinterest view
-      if (nextMode === 'pinterest') {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-      
-      // Scroll to top when switching to irregular collage view
-      if (nextMode === 'irregular') {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-      
-      // Scroll to top when switching to pics-only view
-      if (nextMode === 'pics-only') {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-      
-      return nextMode;
-    });
-  };
-
 
   return (
     <div className="app">
@@ -174,7 +202,7 @@ function App() {
       
 <MusicPlayer 
         tracks={musicTracks} 
-        onLayoutToggle={toggleLayout}
+        onLayoutToggle={() => toggleLayout()}
         viewMode={viewMode}
         isVisible={isMusicPlayerVisible}
         mousePosition={mousePosition}

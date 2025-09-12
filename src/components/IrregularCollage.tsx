@@ -142,17 +142,6 @@ const IrregularCollage: React.FC<IrregularCollageProps> = ({ media, onMediaClick
     const loadPositions = async () => {
       const positions = await generatePositions();
       setPositionedMedia(positions);
-
-      // Add staggered fade-in animation
-      positions.forEach((_, index) => {
-        setTimeout(() => {
-          setPositionedMedia(prev => 
-            prev.map((item, i) => 
-              i === index ? { ...item, opacity: 1 } : item
-            )
-          );
-        }, index * 50); // Faster animation
-      });
     };
 
     loadPositions();
@@ -182,8 +171,7 @@ const IrregularCollage: React.FC<IrregularCollageProps> = ({ media, onMediaClick
             height: `${item.height}px`,
             transform: `rotate(${item.rotation}deg)`,
             zIndex: item.zIndex,
-            opacity: 0,
-            animation: `fadeInCollage 0.8s ease-out ${index * 0.05}s forwards`
+            opacity: 1
           }}
           onClick={() => onMediaClick(item)}
         >
