@@ -12,7 +12,7 @@ function App() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [lightboxGif, setLightboxGif] = useState<GifItem | null>(null);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<'list' | 'stack' | 'large-list' | 'pinterest'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'stack' | 'large-list' | 'pinterest'>('pinterest');
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [isMusicPlayerVisible, setIsMusicPlayerVisible] = useState(true);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
