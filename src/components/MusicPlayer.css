@@ -92,6 +92,60 @@
   opacity: 0.8;
 }
 
+.volume-control {
+  margin-bottom: 4px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0 4px;
+}
+
+.volume-slider {
+  width: 94px;
+  height: 4px;
+  background: #051025;
+  border: none;
+  border-radius: 0;
+  outline: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  background: #06B6D4;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.volume-slider::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  background: #06B6D4;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.volume-slider::-webkit-slider-track {
+  background: #0a1628;
+  height: 4px;
+  border: none;
+  border-radius: 0;
+}
+
+.volume-slider::-moz-range-track {
+  background: #0a1628;
+  height: 4px;
+  border: none;
+  border-radius: 0;
+}
+
 /* Mobile responsiveness */
 @media (max-width: 768px) {
   .music-player {

@@ -16,6 +16,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ tracks, onLayoutToggle, viewM
   const playerRef = useRef<HTMLDivElement>(null);
   const [currentTrack, setCurrentTrack] = useState<MusicTrack | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [volume, setVolume] = useState(0.7);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   // Update position on window resize to maintain relative positioning
@@ -62,6 +63,13 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ tracks, onLayoutToggle, viewM
     }
   }, [currentTrack]);
 
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio) {
+      audio.volume = volume;
+    }
+  }, [volume]);
+
   const togglePlayPause = () => {
     const audio = audioRef.current;
     if (!audio || !currentTrack) return;
@@ -74,6 +82,11 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ tracks, onLayoutToggle, viewM
     setIsPlaying(!isPlaying);
   };
 
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVolume = parseFloat(e.target.value);
+    setVolume(newVolume);
+  };
+
 
   const handleMouseDown = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
@@ -84,6 +97,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ tracks, onLayoutToggle, viewM
         target.closest('button') || 
         target.closest('input') ||
         target.classList.contains('track-item') ||
+        target.classList.contains('volume-control') ||
         target.classList.contains('progress-bar') ||
         target.classList.contains('volume-slider')) {
       return;
