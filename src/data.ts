@@ -14,6 +14,6 @@ export const gifs: GifItem[] = [
 export const musicTracks: MusicTrack[] = [
   { id: '1', name: '005_1', path: 'music/005_1.wav' },
   { id: '2', name: '068_1', path: 'music/068_1.wav' },
-  { id: '3', name: '125_1', path: 'music/025_1 [1].wav' },
+  { id: '3', name: '02425_1', path: 'music/02425_1.wav' },
   { id: '4', name: '075_1', path: 'music/075_1.wav' },
 ];
