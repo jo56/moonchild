@@ -99,7 +99,7 @@ const PinterestGallery: React.FC<PinterestGalleryProps> = ({ media, onMediaClick
             {getColumnItems(columnIndex).map((item, index) => (
               <div 
                 key={item.id}
-                className={`pinterest-item ${item.type === 'gif' ? 'is-gif' : 'is-image'}`}
+                className="pinterest-item"
                 style={{
                   height: `${item.height}px`,
                   animationDelay: `${(columnIndex * getColumnItems(columnIndex).length + index) * 0.1}s`
@@ -113,13 +113,6 @@ const PinterestGallery: React.FC<PinterestGalleryProps> = ({ media, onMediaClick
                     className="pinterest-media"
                     loading="lazy"
                   />
-                  <div className="pinterest-overlay">
-                    <div className="pinterest-title">{item.name}</div>
-                    <div className="pinterest-type">{item.type}</div>
-                  </div>
-                  {item.type === 'gif' && (
-                    <div className="gif-indicator">GIF</div>
-                  )}
                 </div>
               </div>
             ))}
