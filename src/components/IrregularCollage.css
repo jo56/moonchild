@@ -1,10 +1,13 @@
 .irregular-collage {
-  position: relative;
-  width: 100%;
-  overflow: hidden;
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: visible;
   min-height: 100vh;
   padding: 0;
   background: transparent;
+  transition: transform 0.1s ease-out;
+  user-select: none;
 }
 
 .collage-media {
@@ -12,13 +15,15 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: 0;
   overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.collage-media:hover {
-  transform: scale(1.03) rotate(0deg) !important;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
-  z-index: 1000 !important;
+/* Disable hover effects for irregular collage mode */
+.irregular-collage .collage-media:hover {
+  transform: none !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2) !important;
+  z-index: inherit !important;
 }
 
 .collage-image {
@@ -30,8 +35,8 @@
   filter: brightness(0.95) contrast(1.1);
 }
 
-.collage-media:hover .collage-image {
-  filter: brightness(1.1) contrast(1.2);
+.irregular-collage .collage-media:hover .collage-image {
+  filter: brightness(0.95) contrast(1.1) !important;
 }
 
 .collage-overlay {
@@ -54,8 +59,9 @@
   padding: 12px;
 }
 
-.collage-media:hover .collage-overlay {
-  opacity: 1;
+/* Disable overlay hover for irregular collage */
+.irregular-collage .collage-media:hover .collage-overlay {
+  opacity: 0 !important;
 }
 
 .media-type-badge {
@@ -72,8 +78,8 @@
   transition: transform 0.3s ease 0.1s;
 }
 
-.collage-media:hover .media-type-badge {
-  transform: translateY(0);
+.irregular-collage .collage-media:hover .media-type-badge {
+  transform: translateY(10px) !important;
 }
 
 .is-gif {

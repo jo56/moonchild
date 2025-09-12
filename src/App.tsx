@@ -18,7 +18,7 @@ function App() {
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [isMusicPlayerVisible, setIsMusicPlayerVisible] = useState(true);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [teleportTrigger, setTeleportTrigger] = useState(0);
+  const [teleportTrigger] = useState(0);
 
   useEffect(() => {
     const handleScroll = () => {
