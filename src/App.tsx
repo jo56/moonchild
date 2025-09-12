@@ -49,11 +49,11 @@ function App() {
     return () => document.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
-  // Handle shift key to teleport music player to mouse position
+  // Handle shift key to toggle music player visibility
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Shift' && !isLightboxOpen) {
-        setTeleportTrigger(prev => prev + 1); // ONLY teleport, no visibility change
+        setIsMusicPlayerVisible(prev => !prev);
       }
     };
 
