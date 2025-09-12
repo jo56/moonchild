@@ -1,17 +1,18 @@
 import { useState, useEffect } from 'react';
 import GifDisplay from './components/GifDisplay';
 import CollageView from './components/CollageView';
+import PinterestGallery from './components/PinterestGallery';
 import MusicPlayer from './components/MusicPlayer';
 import Lightbox from './components/Lightbox';
-import { gifs, musicTracks } from './data';
-import { GifItem } from './types';
+import { gifs, musicTracks, combinedMedia } from './data';
+import { GifItem, MediaItem } from './types';
 import './App.css';
 
 function App() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [lightboxGif, setLightboxGif] = useState<GifItem | null>(null);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<'list' | 'stack' | 'large-list'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'stack' | 'large-list' | 'pinterest'>('list');
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [isMusicPlayerVisible, setIsMusicPlayerVisible] = useState(true);
 
@@ -57,18 +58,31 @@ function App() {
     setLightboxGif(null);
   };
 
+  const handleMediaClick = (mediaItem: MediaItem) => {
+    const gifItem: GifItem = {
+      id: mediaItem.id,
+      name: mediaItem.name,
+      path: mediaItem.path
+    };
+    openLightbox(gifItem);
+  };
+
   const showNextGif = () => {
     if (!lightboxGif) return;
-    const currentIndex = gifs.findIndex(g => g.id === lightboxGif.id);
-    const nextIndex = (currentIndex + 1) % gifs.length;
-    setLightboxGif(gifs[nextIndex]);
+    const currentArray = viewMode === 'pinterest' ? combinedMedia : gifs;
+    const currentIndex = currentArray.findIndex(g => g.id === lightboxGif.id);
+    const nextIndex = (currentIndex + 1) % currentArray.length;
+    const nextItem = currentArray[nextIndex];
+    setLightboxGif({ id: nextItem.id, name: nextItem.name, path: nextItem.path });
   };
 
   const showPreviousGif = () => {
     if (!lightboxGif) return;
-    const currentIndex = gifs.findIndex(g => g.id === lightboxGif.id);
-    const previousIndex = (currentIndex - 1 + gifs.length) % gifs.length;
-    setLightboxGif(gifs[previousIndex]);
+    const currentArray = viewMode === 'pinterest' ? combinedMedia : gifs;
+    const currentIndex = currentArray.findIndex(g => g.id === lightboxGif.id);
+    const previousIndex = (currentIndex - 1 + currentArray.length) % currentArray.length;
+    const prevItem = currentArray[previousIndex];
+    setLightboxGif({ id: prevItem.id, name: prevItem.name, path: prevItem.path });
   };
 
   const toggleLayout = () => {
@@ -77,7 +91,8 @@ function App() {
         switch (prev) {
           case 'list': return 'stack';
           case 'stack': return 'large-list';
-          case 'large-list': return 'list';
+          case 'large-list': return 'pinterest';
+          case 'pinterest': return 'list';
           default: return 'list';
         }
       })();
@@ -94,6 +109,11 @@ function App() {
           document.body.scrollTop = 0;
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }, 50);
+      }
+      
+      // Scroll to top when switching to pinterest view
+      if (nextMode === 'pinterest') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
       
       return nextMode;
@@ -132,6 +152,11 @@ function App() {
             gifs={gifs} 
             onGifClick={openLightbox}
             variant="large"
+          />
+        ) : viewMode === 'pinterest' ? (
+          <PinterestGallery 
+            media={combinedMedia}
+            onMediaClick={handleMediaClick}
           />
         ) : (
           <CollageView 

@@ -5,7 +5,7 @@ import './MusicPlayer.css';
 interface MusicPlayerProps {
   tracks: MusicTrack[];
   onLayoutToggle: () => void;
-  viewMode: 'list' | 'stack' | 'large-list';
+  viewMode: 'list' | 'stack' | 'large-list' | 'pinterest';
   isVisible?: boolean;
 }
 
@@ -16,7 +16,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ tracks, onLayoutToggle, viewM
   const playerRef = useRef<HTMLDivElement>(null);
   const [currentTrack, setCurrentTrack] = useState<MusicTrack | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [volume, setVolume] = useState(0.7);
+  const [volume] = useState(0.7);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   // Update position on window resize to maintain relative positioning
@@ -82,10 +82,6 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ tracks, onLayoutToggle, viewM
     setIsPlaying(!isPlaying);
   };
 
-  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newVolume = parseFloat(e.target.value);
-    setVolume(newVolume);
-  };
 
 
   const handleMouseDown = (e: React.MouseEvent) => {

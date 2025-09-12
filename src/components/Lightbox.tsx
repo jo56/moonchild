@@ -18,7 +18,6 @@ const Lightbox: React.FC<LightboxProps> = ({ gif, isOpen, onClose, onNext, onPre
   const imageRef = useRef<HTMLImageElement>(null);
   const dragStartRef = useRef({ x: 0, y: 0 });
   const imagePositionRef = useRef({ x: 0, y: 0 });
-  const animationFrameRef = useRef<number>();
   
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
