@@ -9,9 +9,10 @@ interface MusicPlayerProps {
   isVisible?: boolean;
   mousePosition: { x: number; y: number };
   onDismiss: () => void;
+  teleportTrigger?: number; // increment this to trigger teleport
 }
 
-const MusicPlayer: React.FC<MusicPlayerProps> = ({ tracks, onLayoutToggle, viewMode, isVisible = true, mousePosition, onDismiss }) => {
+const MusicPlayer: React.FC<MusicPlayerProps> = ({ tracks, onLayoutToggle, viewMode, isVisible = true, mousePosition, onDismiss, teleportTrigger }) => {
   const [position, setPosition] = useState({ x: window.innerWidth - 180, y: 20 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -21,15 +22,15 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ tracks, onLayoutToggle, viewM
   const [volume] = useState(0.7);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // Teleport to mouse when visibility changes from false to true
+  // Teleport to mouse when teleportTrigger changes (only if not dragging)
   useEffect(() => {
-    if (isVisible && mousePosition.x > 0) {
+    if (teleportTrigger && teleportTrigger > 0 && mousePosition.x > 0 && !isDragging) {
       setPosition({
-        x: mousePosition.x - 100,
-        y: mousePosition.y - 50
+        x: Math.max(10, Math.min(mousePosition.x - 100, window.innerWidth - 220)),
+        y: Math.max(10, Math.min(mousePosition.y - 50, window.innerHeight - 100))
       });
     }
-  }, [isVisible]); // Only depend on isVisible, not mousePosition
+  }, [teleportTrigger]); // Only depend on teleportTrigger
 
   // Update position on window resize to maintain relative positioning
   useEffect(() => {
@@ -125,11 +126,18 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ tracks, onLayoutToggle, viewM
       const newX = e.clientX - dragStart.x;
       const newY = e.clientY - dragStart.y;
       
-      // Allow dragging anywhere (including offscreen)
-      setPosition({
-        x: newX,
-        y: newY
-      });
+      // Keep player within viewport bounds (original working logic)
+      const playerElement = playerRef.current;
+      if (playerElement) {
+        const rect = playerElement.getBoundingClientRect();
+        const maxX = window.innerWidth - rect.width;
+        const maxY = window.innerHeight - rect.height;
+        
+        setPosition({
+          x: Math.max(-50, Math.min(newX, maxX + 50)), // Allow slight offscreen for dismissal
+          y: Math.max(-50, Math.min(newY, maxY + 50))
+        });
+      }
     };
 
     const handleMouseUp = () => {

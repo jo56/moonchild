@@ -16,6 +16,7 @@ function App() {
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [isMusicPlayerVisible, setIsMusicPlayerVisible] = useState(true);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [teleportTrigger, setTeleportTrigger] = useState(0);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -46,11 +47,11 @@ function App() {
     return () => document.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
-  // Handle shift key to show music player at mouse position
+  // Handle shift key to teleport music player to mouse position
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Shift' && !isLightboxOpen) {
-        setIsMusicPlayerVisible(true);
+        setTeleportTrigger(prev => prev + 1); // ONLY teleport, no visibility change
       }
     };
 
@@ -150,6 +151,7 @@ function App() {
         isVisible={isMusicPlayerVisible}
         mousePosition={mousePosition}
         onDismiss={handleMusicPlayerDismiss}
+        teleportTrigger={teleportTrigger}
       />
       
       <main className="main-content">
