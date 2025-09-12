@@ -109,7 +109,7 @@ const PinterestGallery: React.FC<PinterestGalleryProps> = ({ media, onMediaClick
                 <div className="pinterest-media-wrapper">
                   <img 
                     src={item.path} 
-                    alt={item.name}
+                    alt=""
                     className="pinterest-media"
                     loading="lazy"
                   />

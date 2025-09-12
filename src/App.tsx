@@ -15,6 +15,7 @@ function App() {
   const [viewMode, setViewMode] = useState<'list' | 'stack' | 'large-list' | 'pinterest'>('list');
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [isMusicPlayerVisible, setIsMusicPlayerVisible] = useState(true);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     const handleScroll = () => {
@@ -35,11 +36,21 @@ function App() {
     }
   }, [isInitialLoad]);
 
-  // Handle shift key toggle for music player
+  // Track mouse position
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePosition({ x: e.clientX, y: e.clientY });
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    return () => document.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
+  // Handle shift key to show music player at mouse position
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Shift' && !isLightboxOpen) {
-        setIsMusicPlayerVisible(prev => !prev);
+        setIsMusicPlayerVisible(true);
       }
     };
 
@@ -65,6 +76,10 @@ function App() {
       path: mediaItem.path
     };
     openLightbox(gifItem);
+  };
+
+  const handleMusicPlayerDismiss = () => {
+    setIsMusicPlayerVisible(false);
   };
 
   const showNextGif = () => {
@@ -133,6 +148,8 @@ function App() {
         onLayoutToggle={toggleLayout}
         viewMode={viewMode}
         isVisible={isMusicPlayerVisible}
+        mousePosition={mousePosition}
+        onDismiss={handleMusicPlayerDismiss}
       />
       
       <main className="main-content">

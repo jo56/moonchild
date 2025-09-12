@@ -7,9 +7,11 @@ interface MusicPlayerProps {
   onLayoutToggle: () => void;
   viewMode: 'list' | 'stack' | 'large-list' | 'pinterest';
   isVisible?: boolean;
+  mousePosition: { x: number; y: number };
+  onDismiss: () => void;
 }
 
-const MusicPlayer: React.FC<MusicPlayerProps> = ({ tracks, onLayoutToggle, viewMode, isVisible = true }) => {
+const MusicPlayer: React.FC<MusicPlayerProps> = ({ tracks, onLayoutToggle, viewMode, isVisible = true, mousePosition, onDismiss }) => {
   const [position, setPosition] = useState({ x: window.innerWidth - 180, y: 20 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -18,6 +20,16 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ tracks, onLayoutToggle, viewM
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume] = useState(0.7);
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  // Teleport to mouse when visibility changes from false to true
+  useEffect(() => {
+    if (isVisible && mousePosition.x > 0) {
+      setPosition({
+        x: mousePosition.x - 100,
+        y: mousePosition.y - 50
+      });
+    }
+  }, [isVisible]); // Only depend on isVisible, not mousePosition
 
   // Update position on window resize to maintain relative positioning
   useEffect(() => {
@@ -113,22 +125,25 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ tracks, onLayoutToggle, viewM
       const newX = e.clientX - dragStart.x;
       const newY = e.clientY - dragStart.y;
       
-      // Keep player within viewport bounds
-      const playerElement = playerRef.current;
-      if (playerElement) {
-        const rect = playerElement.getBoundingClientRect();
-        const maxX = window.innerWidth - rect.width;
-        const maxY = window.innerHeight - rect.height;
-        
-        setPosition({
-          x: Math.max(0, Math.min(newX, maxX)),
-          y: Math.max(0, Math.min(newY, maxY))
-        });
-      }
+      // Allow dragging anywhere (including offscreen)
+      setPosition({
+        x: newX,
+        y: newY
+      });
     };
 
     const handleMouseUp = () => {
       setIsDragging(false);
+      
+      // Simple dismissal logic - if dragged far off any edge
+      const dismissThreshold = 50;
+      
+      if (position.x < -dismissThreshold ||  // dragged left
+          position.x > window.innerWidth - dismissThreshold ||  // dragged right
+          position.y < -dismissThreshold ||  // dragged up
+          position.y > window.innerHeight - dismissThreshold) { // dragged down
+        onDismiss();
+      }
     };
 
     if (isDragging) {
