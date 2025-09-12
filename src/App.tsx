@@ -258,7 +258,7 @@ function App() {
         )}
       </main>
 
-      {viewMode !== 'pics-only' && (
+      {viewMode !== 'pics-only' && viewMode !== 'pinterest' && (
         <div className="ambient-effects">
           <div className="floating-particle"></div>
           <div className="floating-particle"></div>
