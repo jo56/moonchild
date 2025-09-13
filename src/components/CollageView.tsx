@@ -81,7 +81,15 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
 
   const handleMouseDown = (e: React.MouseEvent, index: number) => {
     if (variant !== 'large') return;
+
+    // Check if we should trigger background drag instead of image drag
+    if (e.button !== 0 || e.shiftKey) {
+      handleBackgroundMouseDown(e);
+      return;
+    }
+
     e.preventDefault();
+    e.stopPropagation(); // Prevent background drag when dragging an image
 
     const element = e.currentTarget as HTMLElement;
     const rect = element.getBoundingClientRect();
@@ -177,9 +185,27 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
   };
 
   const handleBackgroundMouseDown = (e: React.MouseEvent) => {
-    // Only trigger on the grid background, not on images
-    if (variant !== 'large' || e.target !== e.currentTarget) return;
+    // Allow background dragging for large variant from anywhere
+    if (variant !== 'large') return;
+
+    // Allow background dragging when:
+    // 1. Right-clicking anywhere
+    // 2. Left-clicking on background (not on images)
+    // 3. Left-clicking with Shift key held (overrides image dragging)
+    const target = e.target as HTMLElement;
+    const isImageElement = target.classList.contains('collage-image') || target.classList.contains('collage-item');
+
+    const shouldBackgroundDrag =
+      e.button !== 0 || // Right click or middle click
+      !isImageElement || // Click on background
+      e.shiftKey; // Shift + left click to force background drag
+
+    if (!shouldBackgroundDrag) {
+      return;
+    }
+
     e.preventDefault();
+    e.stopPropagation();
 
     const container = containerRef.current;
     if (!container) return;
@@ -262,6 +288,8 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
         zIndex: 10,
         cursor: 'grab'
       } : {}}
+      onMouseDown={variant === 'large' ? handleBackgroundMouseDown : undefined}
+      onContextMenu={variant === 'large' ? (e) => e.preventDefault() : undefined}
     >
       <div
         className="collage-grid"
@@ -273,6 +301,7 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
           minHeight: '100vh'
         } : {}}
         onMouseDown={handleBackgroundMouseDown}
+        onContextMenu={(e) => e.preventDefault()} // Prevent right-click menu
       >
         {orderedGifs.map((gif, index) => {
           const isDragged = dragState.draggedItem === index;

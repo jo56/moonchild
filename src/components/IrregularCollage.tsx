@@ -224,6 +224,9 @@ const IrregularCollage: React.FC<IrregularCollageProps> = ({ media, onMediaClick
   // Viewport navigation handlers
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     // Allow dragging from anywhere in the collage (background or images)
+    // Only left click for viewport dragging (right click for other actions)
+    if (e.button !== 0) return;
+
     setIsDragging(true);
     setDragStart({ x: e.clientX - viewportOffset.x, y: e.clientY - viewportOffset.y });
     setDragStartPos({ x: e.clientX, y: e.clientY });
@@ -277,15 +280,16 @@ const IrregularCollage: React.FC<IrregularCollageProps> = ({ media, onMediaClick
 
   return (
     <div className="irregular-collage-viewport" style={{ width: '100vw', height: '100vh', overflow: 'auto', position: 'relative', background: '#0a1628' }}>
-      <div 
-        className="irregular-collage" 
-        style={{ 
+      <div
+        className="irregular-collage"
+        style={{
           height: `${containerHeight}px`,
           width: `${containerWidth}px`,
           transform: `translate(${viewportOffset.x}px, ${viewportOffset.y}px)`,
           cursor: isDragging ? 'grabbing' : 'grab'
         }}
         onMouseDown={handleMouseDown}
+        onContextMenu={(e) => e.preventDefault()}
       >
       {positionedMedia.map((item) => (
         <div
