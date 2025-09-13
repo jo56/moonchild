@@ -5,7 +5,7 @@ Accompanied with a guitar soundtrack created by myself.
 
 ### Controls
 
-Iterate through the galleries by using **Left/Right** or **A**/**D**.
+Iterate through the galleries using **Left/Right** or **A**/**D**.
 
 Pressing **Shift** toggles menu visibility.
 
