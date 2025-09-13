@@ -128,13 +128,16 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
 
     if (!containerRect) return;
 
-    // Calculate position relative to container including scroll
+    // Use a fixed offset to avoid issues with large images positioned off-screen
+    // This makes dragging feel more natural - grab from center of image
     const offset = {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
+      x: 100, // Fixed offset from left edge
+      y: 50   // Fixed offset from top edge
     };
 
-    console.log('Setting drag state:', { index, offset });
+    console.log('Mouse down event:', { clientX: e.clientX, clientY: e.clientY });
+    console.log('Element rect (current):', rect);
+    console.log('Using fixed offset:', offset);
 
     setDragState({
       draggedItem: index,
@@ -163,6 +166,9 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
         y: e.clientY - containerRect.top + (containerRef.current?.scrollTop || 0)
       };
 
+      console.log('Mouse event:', { clientX: e.clientX, clientY: e.clientY });
+      console.log('Container rect:', containerRect);
+      console.log('Scroll values:', { scrollLeft: containerRef.current?.scrollLeft, scrollTop: containerRef.current?.scrollTop });
       console.log('Current position:', currentPos);
 
       // Expand canvas if near edges - NO BOUNDARIES!
@@ -186,6 +192,7 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
         dragState.draggedElement.style.setProperty('bottom', 'auto', 'important');
 
         console.log('Element styles set:', dragState.draggedElement.style.left, dragState.draggedElement.style.top);
+        console.log('Element position check:', dragState.draggedElement.getBoundingClientRect());
       }
 
       setDragState(prev => ({
