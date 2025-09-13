@@ -86,10 +86,15 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  outline: none;
 }
 
 .toggle-btn:hover {
   opacity: 0.8;
+}
+
+.toggle-btn:focus {
+  outline: none;
 }
 
 .volume-control {
@@ -174,6 +179,7 @@
     width: 144px;
     height: 36px;
     font-size: 20px;
+    outline: none;
   }
 
   .volume-control {
