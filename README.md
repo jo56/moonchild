@@ -8,4 +8,5 @@ Accompanied with a guitar soundtrack created by myself.
 Iterate through the galleries by using the arrow keys or **A**/**D**.
 
 Pressing **Shift** toggles menu visibility.
- 
+
+Press **R** to reload images in the current layout without resetting music.
