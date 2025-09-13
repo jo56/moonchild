@@ -80,8 +80,8 @@
 
 @media (max-width: 768px) {
   .pinterest-gallery {
-    padding: 10px;
-    padding-right: 30px; /* Small buffer */
+    padding: 10px 20px;
+    margin: 0 auto;
   }
   
   .pinterest-columns {
@@ -107,7 +107,8 @@
 
 @media (max-width: 480px) {
   .pinterest-gallery {
-    padding-right: 25px; /* Small buffer */
+    padding: 10px 15px;
+    margin: 0 auto;
   }
   
   .pinterest-columns {
