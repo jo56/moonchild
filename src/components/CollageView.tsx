@@ -202,6 +202,44 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
     document.addEventListener('mouseup', handleMouseUp);
   };
 
+  const handleBackgroundMouseDown = (e: React.MouseEvent) => {
+    // Only trigger on the grid background, not on images
+    if (variant !== 'large' || e.target !== e.currentTarget) return;
+    e.preventDefault();
+
+    const container = containerRef.current;
+    if (!container) return;
+
+    const startScrollLeft = container.scrollLeft;
+    const startScrollTop = container.scrollTop;
+    const startX = e.clientX;
+    const startY = e.clientY;
+
+    // Set cursor to grabbing
+    container.style.cursor = 'grabbing';
+
+    const handleBackgroundMouseMove = (e: MouseEvent) => {
+      // Calculate movement delta
+      const deltaX = e.clientX - startX;
+      const deltaY = e.clientY - startY;
+
+      // Apply movement directly (positive delta = move canvas in that direction)
+      container.scrollLeft = startScrollLeft - deltaX;
+      container.scrollTop = startScrollTop - deltaY;
+    };
+
+    const handleBackgroundMouseUp = () => {
+      // Reset cursor
+      container.style.cursor = 'grab';
+
+      document.removeEventListener('mousemove', handleBackgroundMouseMove);
+      document.removeEventListener('mouseup', handleBackgroundMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleBackgroundMouseMove);
+    document.addEventListener('mouseup', handleBackgroundMouseUp);
+  };
+
 
   const getDragStyle = (index: number): React.CSSProperties => {
     // Simple - no complex state management
@@ -231,7 +269,8 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
         position: 'fixed',
         top: 0,
         left: 0,
-        zIndex: 10
+        zIndex: 10,
+        cursor: 'grab'
       } : {}}
     >
       <div
@@ -243,6 +282,7 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
           minWidth: '100vw',
           minHeight: '100vh'
         } : {}}
+        onMouseDown={handleBackgroundMouseDown}
       >
         {orderedGifs.map((gif, index) => {
           const isDragged = dragState.draggedItem === index;
