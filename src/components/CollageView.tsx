@@ -118,78 +118,14 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
   };
 
   const handleMouseDown = (e: React.MouseEvent, index: number) => {
-    console.log('MouseDown triggered!', { variant, index });
-
-    if (variant !== 'large') {
-      console.log('Not large variant, returning');
-      return;
-    }
+    if (variant !== 'large') return;
 
     e.preventDefault();
     const rect = e.currentTarget.getBoundingClientRect();
-    const containerRect = containerRef.current?.getBoundingClientRect();
-
-    if (!containerRect) return;
-
-    // Use a fixed offset to avoid issues with large images positioned off-screen
-    // This makes dragging feel more natural - grab from center of image
     const offset = {
-      x: 100, // Fixed offset from left edge
-      y: 50   // Fixed offset from top edge
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
     };
-
-    console.log('Mouse down event:', { clientX: e.clientX, clientY: e.clientY });
-    console.log('Element rect (current):', rect);
-    console.log('Using fixed offset:', offset);
-
-    // Set up global mouseup handler immediately
-    const handleGlobalMouseUp = (upEvent: MouseEvent) => {
-      console.log('GLOBAL MouseUp event fired!');
-
-      const containerRect = containerRef.current?.getBoundingClientRect();
-      if (!containerRect) return;
-
-      const finalPos = {
-        x: upEvent.clientX - containerRect.left + (containerRef.current?.scrollLeft || 0) - offset.x,
-        y: upEvent.clientY - containerRect.top + (containerRef.current?.scrollTop || 0) - offset.y
-      };
-
-      console.log('Final position calculated:', finalPos);
-
-      const gifId = gifs[index].id;
-      console.log('Saving position for gif:', gifId);
-
-      // Save the final position
-      setCustomPositions(prev => {
-        const newPositions = {
-          ...prev,
-          [gifId]: finalPos
-        };
-        console.log('Updated custom positions:', newPositions);
-        return newPositions;
-      });
-
-      // Keep the current DOM position and let React take over on next render
-      // Don't modify DOM here - React will apply the custom position via getDragStyle
-
-      // Reset drag state
-      setDragState({
-        draggedItem: null,
-        isDragging: false,
-        startPos: null,
-        currentPos: null,
-        offset: null,
-        draggedElement: null
-      });
-
-      // Remove the global listener
-      document.removeEventListener('mouseup', handleGlobalMouseUp);
-      console.log('Removed global mouseup listener');
-    };
-
-    // Add global mouseup listener
-    document.addEventListener('mouseup', handleGlobalMouseUp);
-    console.log('Added global mouseup listener');
 
     setDragState({
       draggedItem: index,
@@ -347,10 +283,12 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
       console.log(`Applying custom position for gif ${gif.id}:`, customPos);
       const style = {
         position: 'absolute' as const,
-        left: customPos.x,
-        top: customPos.y,
+        left: `${customPos.x}px`,
+        top: `${customPos.y}px`,
         zIndex: 1,
-        transform: 'none'
+        transform: 'none',
+        width: 'auto',
+        height: 'auto'
       };
 
       return style;
