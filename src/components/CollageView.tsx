@@ -169,15 +169,8 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
         return newPositions;
       });
 
-      // Apply final position to DOM element
-      const element = e.currentTarget as HTMLDivElement;
-      if (element) {
-        element.style.setProperty('position', 'absolute', 'important');
-        element.style.setProperty('left', `${finalPos.x}px`, 'important');
-        element.style.setProperty('top', `${finalPos.y}px`, 'important');
-        element.style.setProperty('z-index', '1', 'important');
-        element.style.setProperty('transform', 'none', 'important');
-      }
+      // Keep the current DOM position and let React take over on next render
+      // Don't modify DOM here - React will apply the custom position via getDragStyle
 
       // Reset drag state
       setDragState({
@@ -236,6 +229,8 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
         const dragX = currentPos.x - currentDragState.offset.x;
         const dragY = currentPos.y - currentDragState.offset.y;
 
+        console.log('DOM manipulation during drag:', { dragX, dragY });
+
         currentDragState.draggedElement.style.setProperty('position', 'absolute', 'important');
         currentDragState.draggedElement.style.setProperty('left', `${dragX}px`, 'important');
         currentDragState.draggedElement.style.setProperty('top', `${dragY}px`, 'important');
@@ -245,6 +240,13 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
         currentDragState.draggedElement.style.setProperty('height', 'auto', 'important');
         currentDragState.draggedElement.style.setProperty('right', 'auto', 'important');
         currentDragState.draggedElement.style.setProperty('bottom', 'auto', 'important');
+
+        console.log('DOM styles applied:', currentDragState.draggedElement.style.left, currentDragState.draggedElement.style.top);
+      } else {
+        console.log('DOM manipulation skipped:', {
+          hasElement: !!currentDragState.draggedElement,
+          hasOffset: !!currentDragState.offset
+        });
       }
 
       setDragState(prev => ({
@@ -334,25 +336,10 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
     const gif = orderedGifs[index];
     const customPos = customPositions[gif.id];
 
-    // If currently being dragged (large variant only)
-    if (dragState.draggedItem === index && dragState.currentPos && dragState.offset && variant === 'large') {
-      const dragX = dragState.currentPos.x - dragState.offset.x;
-      const dragY = dragState.currentPos.y - dragState.offset.y;
-
-      console.log('Applying drag style:', { dragX, dragY, index });
-
-      const style = {
-        position: 'absolute' as const,
-        left: `${dragX}px`,
-        top: `${dragY}px`,
-        zIndex: 1000,
-        pointerEvents: 'none' as const,
-        transform: 'none !important',
-        width: 'auto !important',
-        height: 'auto !important'
-      };
-
-      return style;
+    // If currently being dragged (large variant only) - SKIP React styles, let DOM manipulation handle it
+    if (dragState.draggedItem === index && dragState.isDragging && variant === 'large') {
+      console.log('Skipping React drag style - DOM manipulation active for index:', index);
+      return {}; // Return empty to avoid overriding DOM manipulation
     }
 
     // If has a custom stored position (large variant only)
@@ -427,10 +414,17 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
                   transform: 'none',
                   width: 'auto',
                   height: 'auto'
-                } : {})
+                } : {}),
+                pointerEvents: 'auto'
               }}
-              onClick={(e) => handleClick(e, gif)}
-              onMouseDown={(e) => handleMouseDown(e, index)}
+              onClick={(e) => {
+                console.log('Element clicked!', { index, gif: gif.id });
+                handleClick(e, gif);
+              }}
+              onMouseDown={(e) => {
+                console.log('Element mousedown!', { index, gif: gif.id });
+                handleMouseDown(e, index);
+              }}
             >
               <img
                 src={gif.path}
