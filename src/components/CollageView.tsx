@@ -39,6 +39,9 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
     draggedElement: null
   });
 
+  const dragStateRef = useRef(dragState);
+  dragStateRef.current = dragState;
+
   // Update orderedGifs when gifs prop changes
   useEffect(() => {
     setOrderedGifs(gifs);
@@ -139,6 +142,62 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
     console.log('Element rect (current):', rect);
     console.log('Using fixed offset:', offset);
 
+    // Set up global mouseup handler immediately
+    const handleGlobalMouseUp = (upEvent: MouseEvent) => {
+      console.log('GLOBAL MouseUp event fired!');
+
+      const containerRect = containerRef.current?.getBoundingClientRect();
+      if (!containerRect) return;
+
+      const finalPos = {
+        x: upEvent.clientX - containerRect.left + (containerRef.current?.scrollLeft || 0) - offset.x,
+        y: upEvent.clientY - containerRect.top + (containerRef.current?.scrollTop || 0) - offset.y
+      };
+
+      console.log('Final position calculated:', finalPos);
+
+      const gifId = gifs[index].id;
+      console.log('Saving position for gif:', gifId);
+
+      // Save the final position
+      setCustomPositions(prev => {
+        const newPositions = {
+          ...prev,
+          [gifId]: finalPos
+        };
+        console.log('Updated custom positions:', newPositions);
+        return newPositions;
+      });
+
+      // Apply final position to DOM element
+      const element = e.currentTarget as HTMLDivElement;
+      if (element) {
+        element.style.setProperty('position', 'absolute', 'important');
+        element.style.setProperty('left', `${finalPos.x}px`, 'important');
+        element.style.setProperty('top', `${finalPos.y}px`, 'important');
+        element.style.setProperty('z-index', '1', 'important');
+        element.style.setProperty('transform', 'none', 'important');
+      }
+
+      // Reset drag state
+      setDragState({
+        draggedItem: null,
+        isDragging: false,
+        startPos: null,
+        currentPos: null,
+        offset: null,
+        draggedElement: null
+      });
+
+      // Remove the global listener
+      document.removeEventListener('mouseup', handleGlobalMouseUp);
+      console.log('Removed global mouseup listener');
+    };
+
+    // Add global mouseup listener
+    document.addEventListener('mouseup', handleGlobalMouseUp);
+    console.log('Added global mouseup listener');
+
     setDragState({
       draggedItem: index,
       isDragging: true,
@@ -151,11 +210,12 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (!dragState.isDragging || dragState.draggedItem === null || variant !== 'large') {
+      const currentDragState = dragStateRef.current;
+      if (!currentDragState.isDragging || currentDragState.draggedItem === null || variant !== 'large') {
         return;
       }
 
-      console.log('MouseMove triggered!', { isDragging: dragState.isDragging, draggedItem: dragState.draggedItem });
+      console.log('MouseMove triggered!', { isDragging: currentDragState.isDragging, draggedItem: currentDragState.draggedItem });
 
       const containerRect = containerRef.current?.getBoundingClientRect();
       if (!containerRect) return;
@@ -166,33 +226,25 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
         y: e.clientY - containerRect.top + (containerRef.current?.scrollTop || 0)
       };
 
-      console.log('Mouse event:', { clientX: e.clientX, clientY: e.clientY });
-      console.log('Container rect:', containerRect);
-      console.log('Scroll values:', { scrollLeft: containerRef.current?.scrollLeft, scrollTop: containerRef.current?.scrollTop });
       console.log('Current position:', currentPos);
 
       // Expand canvas if near edges - NO BOUNDARIES!
       expandCanvasIfNeeded(currentPos);
 
       // Force direct DOM manipulation as backup
-      if (dragState.draggedElement && dragState.offset) {
-        const dragX = currentPos.x - dragState.offset.x;
-        const dragY = currentPos.y - dragState.offset.y;
+      if (currentDragState.draggedElement && currentDragState.offset) {
+        const dragX = currentPos.x - currentDragState.offset.x;
+        const dragY = currentPos.y - currentDragState.offset.y;
 
-        console.log('DOM manipulation:', { dragX, dragY });
-
-        dragState.draggedElement.style.setProperty('position', 'absolute', 'important');
-        dragState.draggedElement.style.setProperty('left', `${dragX}px`, 'important');
-        dragState.draggedElement.style.setProperty('top', `${dragY}px`, 'important');
-        dragState.draggedElement.style.setProperty('z-index', '1000', 'important');
-        dragState.draggedElement.style.setProperty('transform', 'none', 'important');
-        dragState.draggedElement.style.setProperty('width', 'auto', 'important');
-        dragState.draggedElement.style.setProperty('height', 'auto', 'important');
-        dragState.draggedElement.style.setProperty('right', 'auto', 'important');
-        dragState.draggedElement.style.setProperty('bottom', 'auto', 'important');
-
-        console.log('Element styles set:', dragState.draggedElement.style.left, dragState.draggedElement.style.top);
-        console.log('Element position check:', dragState.draggedElement.getBoundingClientRect());
+        currentDragState.draggedElement.style.setProperty('position', 'absolute', 'important');
+        currentDragState.draggedElement.style.setProperty('left', `${dragX}px`, 'important');
+        currentDragState.draggedElement.style.setProperty('top', `${dragY}px`, 'important');
+        currentDragState.draggedElement.style.setProperty('z-index', '1000', 'important');
+        currentDragState.draggedElement.style.setProperty('transform', 'none', 'important');
+        currentDragState.draggedElement.style.setProperty('width', 'auto', 'important');
+        currentDragState.draggedElement.style.setProperty('height', 'auto', 'important');
+        currentDragState.draggedElement.style.setProperty('right', 'auto', 'important');
+        currentDragState.draggedElement.style.setProperty('bottom', 'auto', 'important');
       }
 
       setDragState(prev => ({
@@ -202,35 +254,51 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
     };
 
     const handleMouseUp = () => {
-      if (dragState.isDragging && dragState.currentPos && dragState.draggedItem !== null && variant === 'large') {
-        const gifId = orderedGifs[dragState.draggedItem].id;
+      console.log('MouseUp event fired!');
+      const currentDragState = dragStateRef.current;
+
+      console.log('MouseUp state check:', {
+        isDragging: currentDragState.isDragging,
+        currentPos: currentDragState.currentPos,
+        draggedItem: currentDragState.draggedItem,
+        variant
+      });
+
+      if (currentDragState.isDragging && currentDragState.currentPos && currentDragState.draggedItem !== null && variant === 'large') {
+        const gifId = orderedGifs[currentDragState.draggedItem].id;
         const finalPos = {
-          x: dragState.currentPos.x - (dragState.offset?.x || 0),
-          y: dragState.currentPos.y - (dragState.offset?.y || 0)
+          x: currentDragState.currentPos.x - (currentDragState.offset?.x || 0),
+          y: currentDragState.currentPos.y - (currentDragState.offset?.y || 0)
         };
 
         console.log('Mouse up - saving final position:', finalPos);
+        console.log('GIF ID:', gifId);
 
         // Expand canvas based on final position
         expandCanvasIfNeeded(finalPos);
 
         // Save the final position - NO RESTRICTIONS
-        setCustomPositions(prev => ({
-          ...prev,
-          [gifId]: finalPos
-        }));
+        setCustomPositions(prev => {
+          const newPositions = {
+            ...prev,
+            [gifId]: finalPos
+          };
+          console.log('Updated custom positions:', newPositions);
+          return newPositions;
+        });
 
-        // Apply final position directly to DOM to ensure it sticks
-        if (dragState.draggedElement) {
-          dragState.draggedElement.style.setProperty('position', 'absolute', 'important');
-          dragState.draggedElement.style.setProperty('left', `${finalPos.x}px`, 'important');
-          dragState.draggedElement.style.setProperty('top', `${finalPos.y}px`, 'important');
-          dragState.draggedElement.style.setProperty('z-index', '1', 'important');
-          dragState.draggedElement.style.setProperty('transform', 'none', 'important');
-          dragState.draggedElement.style.setProperty('width', 'auto', 'important');
-          dragState.draggedElement.style.setProperty('height', 'auto', 'important');
-          dragState.draggedElement.style.setProperty('right', 'auto', 'important');
-          dragState.draggedElement.style.setProperty('bottom', 'auto', 'important');
+        // Keep the element in place with direct DOM manipulation until React re-renders
+        if (currentDragState.draggedElement) {
+          console.log('Setting final DOM position:', finalPos);
+          currentDragState.draggedElement.style.setProperty('position', 'absolute', 'important');
+          currentDragState.draggedElement.style.setProperty('left', `${finalPos.x}px`, 'important');
+          currentDragState.draggedElement.style.setProperty('top', `${finalPos.y}px`, 'important');
+          currentDragState.draggedElement.style.setProperty('z-index', '1', 'important');
+          currentDragState.draggedElement.style.setProperty('transform', 'none', 'important');
+          currentDragState.draggedElement.style.setProperty('width', 'auto', 'important');
+          currentDragState.draggedElement.style.setProperty('height', 'auto', 'important');
+          currentDragState.draggedElement.style.setProperty('right', 'auto', 'important');
+          currentDragState.draggedElement.style.setProperty('bottom', 'auto', 'important');
         }
 
         setDragState({
@@ -242,18 +310,25 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
           draggedElement: null
         });
       }
+
+      // Always remove listeners on mouseup
+      console.log('Removing event listeners on mouseup');
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
     };
 
     if (dragState.isDragging) {
+      console.log('Adding event listeners for drag state');
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
-      
+
       return () => {
+        console.log('Removing event listeners in cleanup');
         document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);
       };
     }
-  }, [dragState.isDragging, dragState.draggedItem]);
+  }, [dragState.isDragging]);
 
   const getDragStyle = (index: number): React.CSSProperties => {
     const gif = orderedGifs[index];
@@ -282,6 +357,7 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
 
     // If has a custom stored position (large variant only)
     if (customPos && variant === 'large') {
+      console.log(`Applying custom position for gif ${gif.id}:`, customPos);
       const style = {
         position: 'absolute' as const,
         left: customPos.x,
