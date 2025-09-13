@@ -48,26 +48,35 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
   const expandCanvasIfNeeded = (position: { x: number; y: number }) => {
     if (variant !== 'large') return;
 
-    const expandThreshold = 800; // Much larger threshold - expand when closer to center
-    const expandAmount = 2000; // Expand by more
+    const expandThreshold = 300; // Threshold from canvas edge
+    const expandAmount = 2000; // Expand by this amount
 
     let newWidth = canvasSize.width;
     let newHeight = canvasSize.height;
 
-    // Expand horizontally - NO LIMITS
-    if (position.x + expandThreshold > canvasSize.width) {
+    console.log('Checking canvas expansion for position:', position, 'Canvas size:', canvasSize);
+
+    // Expand to the right if we're within threshold of right edge
+    if (position.x > canvasSize.width - expandThreshold) {
       newWidth = canvasSize.width + expandAmount;
-    }
-    if (position.x < expandThreshold) {
-      newWidth = Math.max(newWidth, canvasSize.width + expandAmount);
+      console.log('Expanding right, new width:', newWidth);
     }
 
-    // Expand vertically - NO LIMITS
-    if (position.y + expandThreshold > canvasSize.height) {
+    // Expand down if we're within threshold of bottom edge
+    if (position.y > canvasSize.height - expandThreshold) {
       newHeight = canvasSize.height + expandAmount;
+      console.log('Expanding down, new height:', newHeight);
     }
-    if (position.y < expandThreshold) {
-      newHeight = Math.max(newHeight, canvasSize.height + expandAmount);
+
+    // Also expand if we're dragging beyond current canvas bounds
+    if (position.x > canvasSize.width) {
+      newWidth = Math.max(newWidth, position.x + expandAmount);
+      console.log('Expanding beyond right edge, new width:', newWidth);
+    }
+
+    if (position.y > canvasSize.height) {
+      newHeight = Math.max(newHeight, position.y + expandAmount);
+      console.log('Expanding beyond bottom edge, new height:', newHeight);
     }
 
     if (newWidth !== canvasSize.width || newHeight !== canvasSize.height) {
@@ -193,6 +202,8 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
           y: dragState.currentPos.y - (dragState.offset?.y || 0)
         };
 
+        console.log('Mouse up - saving final position:', finalPos);
+
         // Expand canvas based on final position
         expandCanvasIfNeeded(finalPos);
 
@@ -201,6 +212,19 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
           ...prev,
           [gifId]: finalPos
         }));
+
+        // Apply final position directly to DOM to ensure it sticks
+        if (dragState.draggedElement) {
+          dragState.draggedElement.style.setProperty('position', 'absolute', 'important');
+          dragState.draggedElement.style.setProperty('left', `${finalPos.x}px`, 'important');
+          dragState.draggedElement.style.setProperty('top', `${finalPos.y}px`, 'important');
+          dragState.draggedElement.style.setProperty('z-index', '1', 'important');
+          dragState.draggedElement.style.setProperty('transform', 'none', 'important');
+          dragState.draggedElement.style.setProperty('width', 'auto', 'important');
+          dragState.draggedElement.style.setProperty('height', 'auto', 'important');
+          dragState.draggedElement.style.setProperty('right', 'auto', 'important');
+          dragState.draggedElement.style.setProperty('bottom', 'auto', 'important');
+        }
 
         setDragState({
           draggedItem: null,
