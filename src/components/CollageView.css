@@ -352,14 +352,51 @@
   transform: none !important;
 }
 
-/* Override all specific large-item positioning when dragging or custom positioned */
+/* FORCE override all specific large-item positioning when dragging or custom positioned */
 .large-collage .large-item.dragging,
+.large-collage .large-item.custom-positioned,
 .large-collage .large-item[style*="left:"] {
+  position: absolute !important;
   top: auto !important;
   left: auto !important;
   right: auto !important;
   bottom: auto !important;
   transform: none !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+/* Ultra-specific override for dragging state - override everything */
+.large-collage .collage-grid .collage-item.dragging {
+  position: absolute !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+  z-index: 1000 !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+/* Override all large-item specific positioning classes during drag */
+.large-collage .large-item-1.dragging,
+.large-collage .large-item-2.dragging,
+.large-collage .large-item-3.dragging,
+.large-collage .large-item-4.dragging,
+.large-collage .large-item-5.dragging,
+.large-collage .large-item-6.dragging,
+.large-collage .large-item-7.dragging,
+.large-collage .large-item-8.dragging {
+  position: absolute !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+  width: auto !important;
+  height: auto !important;
+  z-index: 1000 !important;
 }
 
 
