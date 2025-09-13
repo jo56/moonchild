@@ -23,10 +23,12 @@
   cursor: pointer;
 }
 
+/* Disabled mouseover zoom effect
 .collage-item:hover {
   z-index: 10;
   transform: scale(1.05);
 }
+*/
 
 .collage-image {
   width: 100%;
@@ -48,7 +50,14 @@
   font-family: 'Courier New', monospace;
 }
 
+/* Disabled overlay hover effect for large layout
 .collage-item:hover .collage-overlay {
+  opacity: 1;
+}
+*/
+
+/* Only enable overlay hover for non-large layouts */
+.collage-container:not(.large-collage) .collage-item:hover .collage-overlay {
   opacity: 1;
 }
 
@@ -322,11 +331,13 @@
   height: auto !important;
 }
 
+/* Disabled hover effect for large items
 .large-item:hover {
   transform: scale(1.02);
   box-shadow: 0 8px 16px rgba(58, 122, 138, 0.3);
   z-index: 10;
 }
+*/
 
 .large-item:active {
   cursor: grabbing;
@@ -335,7 +346,7 @@
 .large-item.dragging {
   position: absolute !important;
   opacity: 0.8;
-  transform: scale(1.05) rotate(3deg);
+  transform: none;
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
   cursor: grabbing;
   transition: none;

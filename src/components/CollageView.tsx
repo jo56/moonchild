@@ -119,182 +119,48 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
 
   const handleMouseDown = (e: React.MouseEvent, index: number) => {
     if (variant !== 'large') return;
-
     e.preventDefault();
-    const rect = e.currentTarget.getBoundingClientRect();
-    const offset = {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
-    };
 
-    setDragState({
-      draggedItem: index,
-      isDragging: true,
-      startPos: { x: e.clientX, y: e.clientY },
-      currentPos: { x: e.clientX, y: e.clientY },
-      offset,
-      draggedElement: e.currentTarget as HTMLDivElement
-    });
-  };
+    const element = e.currentTarget as HTMLElement;
+    const rect = element.getBoundingClientRect();
+    const container = containerRef.current;
+    if (!container) return;
 
-  useEffect(() => {
+    const containerRect = container.getBoundingClientRect();
+
+    // Calculate offset from mouse to element's top-left corner
+    const offsetX = e.clientX - rect.left;
+    const offsetY = e.clientY - rect.top;
+
     const handleMouseMove = (e: MouseEvent) => {
-      const currentDragState = dragStateRef.current;
-      if (!currentDragState.isDragging || currentDragState.draggedItem === null || variant !== 'large') {
-        return;
-      }
+      // Use simple viewport coordinates
+      const newX = e.clientX - offsetX;
+      const newY = e.clientY - offsetY;
 
-      console.log('MouseMove triggered!', { isDragging: currentDragState.isDragging, draggedItem: currentDragState.draggedItem });
-
-      const containerRect = containerRef.current?.getBoundingClientRect();
-      if (!containerRect) return;
-
-      // Calculate position relative to the expanded canvas including scroll
-      const currentPos = {
-        x: e.clientX - containerRect.left + (containerRef.current?.scrollLeft || 0),
-        y: e.clientY - containerRect.top + (containerRef.current?.scrollTop || 0)
-      };
-
-      console.log('Current position:', currentPos);
-
-      // Expand canvas if near edges - NO BOUNDARIES!
-      expandCanvasIfNeeded(currentPos);
-
-      // Force direct DOM manipulation as backup
-      if (currentDragState.draggedElement && currentDragState.offset) {
-        const dragX = currentPos.x - currentDragState.offset.x;
-        const dragY = currentPos.y - currentDragState.offset.y;
-
-        console.log('DOM manipulation during drag:', { dragX, dragY });
-
-        currentDragState.draggedElement.style.setProperty('position', 'absolute', 'important');
-        currentDragState.draggedElement.style.setProperty('left', `${dragX}px`, 'important');
-        currentDragState.draggedElement.style.setProperty('top', `${dragY}px`, 'important');
-        currentDragState.draggedElement.style.setProperty('z-index', '1000', 'important');
-        currentDragState.draggedElement.style.setProperty('transform', 'none', 'important');
-        currentDragState.draggedElement.style.setProperty('width', 'auto', 'important');
-        currentDragState.draggedElement.style.setProperty('height', 'auto', 'important');
-        currentDragState.draggedElement.style.setProperty('right', 'auto', 'important');
-        currentDragState.draggedElement.style.setProperty('bottom', 'auto', 'important');
-
-        console.log('DOM styles applied:', currentDragState.draggedElement.style.left, currentDragState.draggedElement.style.top);
-      } else {
-        console.log('DOM manipulation skipped:', {
-          hasElement: !!currentDragState.draggedElement,
-          hasOffset: !!currentDragState.offset
-        });
-      }
-
-      setDragState(prev => ({
-        ...prev,
-        currentPos
-      }));
+      // Force override all CSS
+      element.style.setProperty('position', 'fixed', 'important');
+      element.style.setProperty('left', newX + 'px', 'important');
+      element.style.setProperty('top', newY + 'px', 'important');
+      element.style.setProperty('z-index', '9999', 'important');
+      element.style.setProperty('transform', 'none', 'important');
+      element.style.setProperty('pointer-events', 'none', 'important');
     };
 
     const handleMouseUp = () => {
-      console.log('MouseUp event fired!');
-      const currentDragState = dragStateRef.current;
+      // Reset pointer events
+      element.style.setProperty('pointer-events', 'auto', 'important');
 
-      console.log('MouseUp state check:', {
-        isDragging: currentDragState.isDragging,
-        currentPos: currentDragState.currentPos,
-        draggedItem: currentDragState.draggedItem,
-        variant
-      });
-
-      if (currentDragState.isDragging && currentDragState.currentPos && currentDragState.draggedItem !== null && variant === 'large') {
-        const gifId = orderedGifs[currentDragState.draggedItem].id;
-        const finalPos = {
-          x: currentDragState.currentPos.x - (currentDragState.offset?.x || 0),
-          y: currentDragState.currentPos.y - (currentDragState.offset?.y || 0)
-        };
-
-        console.log('Mouse up - saving final position:', finalPos);
-        console.log('GIF ID:', gifId);
-
-        // Expand canvas based on final position
-        expandCanvasIfNeeded(finalPos);
-
-        // Save the final position - NO RESTRICTIONS
-        setCustomPositions(prev => {
-          const newPositions = {
-            ...prev,
-            [gifId]: finalPos
-          };
-          console.log('Updated custom positions:', newPositions);
-          return newPositions;
-        });
-
-        // Keep the element in place with direct DOM manipulation until React re-renders
-        if (currentDragState.draggedElement) {
-          console.log('Setting final DOM position:', finalPos);
-          currentDragState.draggedElement.style.setProperty('position', 'absolute', 'important');
-          currentDragState.draggedElement.style.setProperty('left', `${finalPos.x}px`, 'important');
-          currentDragState.draggedElement.style.setProperty('top', `${finalPos.y}px`, 'important');
-          currentDragState.draggedElement.style.setProperty('z-index', '1', 'important');
-          currentDragState.draggedElement.style.setProperty('transform', 'none', 'important');
-          currentDragState.draggedElement.style.setProperty('width', 'auto', 'important');
-          currentDragState.draggedElement.style.setProperty('height', 'auto', 'important');
-          currentDragState.draggedElement.style.setProperty('right', 'auto', 'important');
-          currentDragState.draggedElement.style.setProperty('bottom', 'auto', 'important');
-        }
-
-        setDragState({
-          draggedItem: null,
-          isDragging: false,
-          startPos: null,
-          currentPos: null,
-          offset: null,
-          draggedElement: null
-        });
-      }
-
-      // Always remove listeners on mouseup
-      console.log('Removing event listeners on mouseup');
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
 
-    if (dragState.isDragging) {
-      console.log('Adding event listeners for drag state');
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
 
-      return () => {
-        console.log('Removing event listeners in cleanup');
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-      };
-    }
-  }, [dragState.isDragging]);
 
   const getDragStyle = (index: number): React.CSSProperties => {
-    const gif = orderedGifs[index];
-    const customPos = customPositions[gif.id];
-
-    // If currently being dragged (large variant only) - SKIP React styles, let DOM manipulation handle it
-    if (dragState.draggedItem === index && dragState.isDragging && variant === 'large') {
-      console.log('Skipping React drag style - DOM manipulation active for index:', index);
-      return {}; // Return empty to avoid overriding DOM manipulation
-    }
-
-    // If has a custom stored position (large variant only)
-    if (customPos && variant === 'large') {
-      console.log(`Applying custom position for gif ${gif.id}:`, customPos);
-      const style = {
-        position: 'absolute' as const,
-        left: `${customPos.x}px`,
-        top: `${customPos.y}px`,
-        zIndex: 1,
-        transform: 'none',
-        width: 'auto',
-        height: 'auto'
-      };
-
-      return style;
-    }
-
-    // Default positioning - use CSS classes for other variants
+    // Simple - no complex state management
     return {};
   };
 
@@ -345,13 +211,15 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
               style={{
                 ...dragStyle,
                 ...(isDragged && variant === 'large' ? {
-                  position: 'absolute',
-                  left: dragStyle.left,
-                  top: dragStyle.top,
+                  position: 'absolute !important',
+                  left: `${dragStyle.left} !important`,
+                  top: `${dragStyle.top} !important`,
                   zIndex: 1000,
-                  transform: 'none',
-                  width: 'auto',
-                  height: 'auto'
+                  transform: 'none !important',
+                  width: 'auto !important',
+                  height: 'auto !important',
+                  right: 'auto !important',
+                  bottom: 'auto !important'
                 } : {}),
                 pointerEvents: 'auto'
               }}
