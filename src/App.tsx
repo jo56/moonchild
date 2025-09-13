@@ -69,19 +69,19 @@ function App() {
           switch (prev) {
             case 'list': return 'pinterest';
             case 'stack': return 'list';
-            case 'large-list': return 'stack';
-            case 'irregular': return 'large-list';
+            case 'irregular': return 'stack';
             case 'pics-only': return 'irregular';
-            case 'pinterest': return 'pics-only';
+            case 'large-list': return 'pics-only';
+            case 'pinterest': return 'large-list';
             default: return 'list';
           }
         } else {
           switch (prev) {
             case 'list': return 'stack';
-            case 'stack': return 'large-list';
-            case 'large-list': return 'irregular';
+            case 'stack': return 'irregular';
             case 'irregular': return 'pics-only';
-            case 'pics-only': return 'pinterest';
+            case 'pics-only': return 'large-list';
+            case 'large-list': return 'pinterest';
             case 'pinterest': return 'list';
             default: return 'list';
           }
@@ -114,6 +114,11 @@ function App() {
       
       // Scroll to top when switching to pics-only view
       if (nextMode === 'pics-only') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      // Scroll to top when switching to large-list view
+      if (nextMode === 'large-list') {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
       
