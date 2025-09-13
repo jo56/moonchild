@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { GifItem } from '../types';
 import './CollageView.css';
 
@@ -16,9 +16,19 @@ interface DragState {
   offset: { x: number; y: number } | null;
 }
 
+interface CanvasSize {
+  width: number;
+  height: number;
+}
+
 const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) => {
   const [orderedGifs, setOrderedGifs] = useState<GifItem[]>(gifs);
   const [customPositions, setCustomPositions] = useState<Record<string, {x: number, y: number}>>({});
+  const [canvasSize, setCanvasSize] = useState<CanvasSize>({
+    width: Math.max(window.innerWidth * 4, 4000),
+    height: Math.max(window.innerHeight * 4, 4000)
+  });
+  const containerRef = useRef<HTMLDivElement>(null);
   const [dragState, setDragState] = useState<DragState>({
     draggedItem: null,
     isDragging: false,
@@ -32,6 +42,37 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
     setOrderedGifs(gifs);
   }, [gifs]);
 
+  // Auto-expand canvas when items are dragged near edges (ONLY for large variant - layout1.png)
+  const expandCanvasIfNeeded = (position: { x: number; y: number }) => {
+    if (variant !== 'large') return;
+
+    const expandThreshold = 300; // Distance from edge to trigger expansion
+    const expandAmount = 1000; // How much to expand by
+
+    let newWidth = canvasSize.width;
+    let newHeight = canvasSize.height;
+
+    // Expand horizontally - NO LIMITS
+    if (position.x + expandThreshold > canvasSize.width) {
+      newWidth = canvasSize.width + expandAmount;
+    }
+    if (position.x < expandThreshold) {
+      newWidth = Math.max(newWidth, canvasSize.width + expandAmount);
+    }
+
+    // Expand vertically - NO LIMITS
+    if (position.y + expandThreshold > canvasSize.height) {
+      newHeight = canvasSize.height + expandAmount;
+    }
+    if (position.y < expandThreshold) {
+      newHeight = Math.max(newHeight, canvasSize.height + expandAmount);
+    }
+
+    if (newWidth !== canvasSize.width || newHeight !== canvasSize.height) {
+      setCanvasSize({ width: newWidth, height: newHeight });
+    }
+  };
+
   const getContainerClass = () => {
     switch (variant) {
       case 'large': return 'large-collage';
@@ -42,9 +83,16 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
 
   const getItemClass = (index: number) => {
     const baseClass = dragState.draggedItem === index ? 'dragging' : '';
-    
+    const gif = orderedGifs[index];
+    const hasCustomPosition = customPositions[gif.id];
+
     switch (variant) {
-      case 'large': return `large-item large-item-${index + 1} ${baseClass}`;
+      case 'large':
+        // Don't apply specific positioning classes if item has custom position or is being dragged
+        if (hasCustomPosition || dragState.draggedItem === index) {
+          return `large-item ${baseClass}`;
+        }
+        return `large-item large-item-${index + 1} ${baseClass}`;
       case 'stack': return `stack-item stack-item-${index + 1} ${baseClass}`;
       default: return '';
     }
@@ -52,14 +100,19 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
 
   const handleMouseDown = (e: React.MouseEvent, index: number) => {
     if (variant !== 'large') return;
-    
+
     e.preventDefault();
     const rect = e.currentTarget.getBoundingClientRect();
+    const containerRect = containerRef.current?.getBoundingClientRect();
+
+    if (!containerRect) return;
+
+    // Calculate position relative to container including scroll
     const offset = {
       x: e.clientX - rect.left,
       y: e.clientY - rect.top
     };
-    
+
     setDragState({
       draggedItem: index,
       isDragging: true,
@@ -67,37 +120,47 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
       currentPos: { x: e.clientX, y: e.clientY },
       offset
     });
-    
-    console.log('Mouse drag start:', index);
   };
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (!dragState.isDragging || dragState.draggedItem === null) return;
-      
-      console.log('Mouse move:', e.clientX, e.clientY);
+      if (!dragState.isDragging || dragState.draggedItem === null || variant !== 'large') return;
+
+      const containerRect = containerRef.current?.getBoundingClientRect();
+      if (!containerRect) return;
+
+      // Calculate position relative to the expanded canvas including scroll
+      const currentPos = {
+        x: e.clientX - containerRect.left + (containerRef.current?.scrollLeft || 0),
+        y: e.clientY - containerRect.top + (containerRef.current?.scrollTop || 0)
+      };
+
+      // Expand canvas if near edges - NO BOUNDARIES!
+      expandCanvasIfNeeded(currentPos);
+
       setDragState(prev => ({
         ...prev,
-        currentPos: { x: e.clientX, y: e.clientY }
+        currentPos
       }));
     };
 
     const handleMouseUp = () => {
-      if (dragState.isDragging && dragState.currentPos && dragState.draggedItem !== null) {
+      if (dragState.isDragging && dragState.currentPos && dragState.draggedItem !== null && variant === 'large') {
         const gifId = orderedGifs[dragState.draggedItem].id;
         const finalPos = {
           x: dragState.currentPos.x - (dragState.offset?.x || 0),
           y: dragState.currentPos.y - (dragState.offset?.y || 0)
         };
-        
-        console.log('Mouse drag end - saving position:', finalPos, 'for gif:', gifId);
-        
-        // Save the final position
+
+        // Expand canvas based on final position
+        expandCanvasIfNeeded(finalPos);
+
+        // Save the final position - NO RESTRICTIONS
         setCustomPositions(prev => ({
           ...prev,
           [gifId]: finalPos
         }));
-        
+
         setDragState({
           draggedItem: null,
           isDragging: false,
@@ -122,35 +185,35 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
   const getDragStyle = (index: number): React.CSSProperties => {
     const gif = orderedGifs[index];
     const customPos = customPositions[gif.id];
-    
-    // If currently being dragged
-    if (dragState.draggedItem === index && dragState.currentPos && dragState.offset) {
+
+    // If currently being dragged (large variant only)
+    if (dragState.draggedItem === index && dragState.currentPos && dragState.offset && variant === 'large') {
       const style = {
-        position: 'fixed' as const,
+        position: 'absolute' as const,
         left: dragState.currentPos.x - dragState.offset.x,
         top: dragState.currentPos.y - dragState.offset.y,
         zIndex: 1000,
-        pointerEvents: 'none' as const
+        pointerEvents: 'none' as const,
+        transform: 'none'
       };
-      
-      console.log('Drag style for item', index, ':', style);
+
       return style;
     }
-    
-    // If has a custom stored position
+
+    // If has a custom stored position (large variant only)
     if (customPos && variant === 'large') {
       const style = {
-        position: 'fixed' as const,
+        position: 'absolute' as const,
         left: customPos.x,
         top: customPos.y,
-        zIndex: 1
+        zIndex: 1,
+        transform: 'none'
       };
-      
-      console.log('Custom position for item', index, ':', style);
+
       return style;
     }
-    
-    // Default positioning
+
+    // Default positioning - use CSS classes for other variants
     return {};
   };
 
@@ -165,21 +228,41 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
   };
 
 
+
   return (
-    <div className={`collage-container ${getContainerClass()}`}>
-      <div 
+    <div
+      ref={containerRef}
+      className={`collage-container ${getContainerClass()}`}
+      style={variant === 'large' ? {
+        overflow: 'auto',
+        width: '100vw',
+        height: '100vh',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        zIndex: 1
+      } : {}}
+    >
+      <div
         className="collage-grid"
+        style={variant === 'large' ? {
+          width: `${canvasSize.width}px`,
+          height: `${canvasSize.height}px`,
+          position: 'relative',
+          minWidth: '100vw',
+          minHeight: '100vh'
+        } : {}}
       >
         {orderedGifs.map((gif, index) => (
-          <div 
+          <div
             key={gif.id}
             className={`collage-item ${getItemClass(index)}`}
             style={getDragStyle(index)}
             onClick={(e) => handleClick(e, gif)}
             onMouseDown={(e) => handleMouseDown(e, index)}
           >
-            <img 
-              src={gif.path} 
+            <img
+              src={gif.path}
               alt={gif.name}
               className="collage-image"
               loading="lazy"

@@ -184,19 +184,26 @@
   transform: rotate(1deg);
 }
 
-/* New large collage - original sizes with bi-directional scroll */
+/* New large collage - layout1.png expandable drag canvas */
 .large-collage {
-  padding: 2rem;
+  padding: 0;
+  margin: 0;
   min-height: 100vh;
-  overflow: hidden;
-  position: relative;
+  overflow: auto;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #0a1628;
+  z-index: 1;
 }
 
 .large-collage .collage-grid {
   position: relative;
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
+  min-width: 100vw;
+  min-height: 100vh;
+  overflow: visible;
 }
 
 .large-item {
@@ -305,16 +312,20 @@
   display: block;
 }
 
-/* Mouse drag styles for large view */
+/* Mouse drag styles for large view - layout1.png */
 .large-item {
   cursor: grab;
   transition: all 0.2s ease;
   user-select: none;
+  position: absolute !important;
+  width: auto !important;
+  height: auto !important;
 }
 
 .large-item:hover {
   transform: scale(1.02);
   box-shadow: 0 8px 16px rgba(58, 122, 138, 0.3);
+  z-index: 10;
 }
 
 .large-item:active {
@@ -322,25 +333,33 @@
 }
 
 .large-item.dragging {
-  position: fixed !important;
+  position: absolute !important;
   opacity: 0.8;
   transform: scale(1.05) rotate(3deg);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
   cursor: grabbing;
   transition: none;
-  top: auto !important;
-  left: auto !important;
-  right: auto !important;
-  bottom: auto !important;
+  z-index: 1000;
 }
 
-/* Custom positioned items */
-.large-item[style*="position: fixed"] {
-  position: fixed !important;
+/* Custom positioned items - layout1.png - OVERRIDE specific positioning */
+.large-collage .large-item[style*="position: absolute"] {
+  position: absolute !important;
   top: auto !important;
   left: auto !important;
   right: auto !important;
   bottom: auto !important;
+  transform: none !important;
+}
+
+/* Override all specific large-item positioning when dragging or custom positioned */
+.large-collage .large-item.dragging,
+.large-collage .large-item[style*="left:"] {
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: none !important;
 }
 
 

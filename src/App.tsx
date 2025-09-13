@@ -197,9 +197,10 @@ function App() {
   };
 
 
+
   return (
     <div className="app">
-      <div 
+      <div
         className="scroll-progress-bar"
         style={{ width: `${scrollProgress}%` }}
       />
