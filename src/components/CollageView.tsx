@@ -139,6 +139,48 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
       const newX = e.clientX - containerRect.left + scrollLeft - offsetX;
       const newY = e.clientY - containerRect.top + scrollTop - offsetY;
 
+      // Always ensure canvas is large enough for current drag position
+      const buffer = 500; // Extra space beyond drag position
+      let newCanvasWidth = Math.max(canvasSize.width, newX + buffer);
+      let newCanvasHeight = Math.max(canvasSize.height, newY + buffer);
+
+      // Immediately update DOM if canvas needs to grow
+      if (newCanvasWidth > canvasSize.width || newCanvasHeight > canvasSize.height) {
+        const grid = container.querySelector('.collage-grid') as HTMLElement;
+        if (grid) {
+          grid.style.width = newCanvasWidth + 'px';
+          grid.style.height = newCanvasHeight + 'px';
+        }
+
+        // Update React state
+        setCanvasSize({ width: newCanvasWidth, height: newCanvasHeight });
+      }
+
+      // Auto-scroll to follow the dragged item
+      const scrollMargin = 100; // Start scrolling when within 100px of viewport edge
+      const containerWidth = container.clientWidth;
+      const containerHeight = container.clientHeight;
+
+      // Check if we need to scroll horizontally
+      const mouseXInViewport = e.clientX - containerRect.left;
+      if (mouseXInViewport > containerWidth - scrollMargin) {
+        // Scroll right
+        container.scrollLeft += 20;
+      } else if (mouseXInViewport < scrollMargin) {
+        // Scroll left
+        container.scrollLeft -= 20;
+      }
+
+      // Check if we need to scroll vertically
+      const mouseYInViewport = e.clientY - containerRect.top;
+      if (mouseYInViewport > containerHeight - scrollMargin) {
+        // Scroll down
+        container.scrollTop += 20;
+      } else if (mouseYInViewport < scrollMargin) {
+        // Scroll up
+        container.scrollTop -= 20;
+      }
+
       // Use absolute positioning so it stays in the background
       element.style.setProperty('position', 'absolute', 'important');
       element.style.setProperty('left', newX + 'px', 'important');
