@@ -10,17 +10,32 @@ interface MusicPlayerProps {
   mousePosition: { x: number; y: number };
   onDismiss: () => void;
   teleportTrigger?: number; // increment this to trigger teleport
+  currentTrack: MusicTrack | null;
+  isPlaying: boolean;
+  onTrackPlay: (track: MusicTrack) => void;
+  onPlayingChange: (playing: boolean) => void;
 }
 
-const MusicPlayer: React.FC<MusicPlayerProps> = ({ tracks, onLayoutToggle, viewMode, isVisible = true, mousePosition, onDismiss, teleportTrigger }) => {
+const MusicPlayer: React.FC<MusicPlayerProps> = ({
+  tracks,
+  onLayoutToggle,
+  viewMode,
+  isVisible = true,
+  mousePosition,
+  onDismiss,
+  teleportTrigger,
+  currentTrack,
+  isPlaying,
+  onTrackPlay,
+  onPlayingChange
+}) => {
   const [position, setPosition] = useState({ x: window.innerWidth - 180, y: 20 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const playerRef = useRef<HTMLDivElement>(null);
-  const [currentTrack, setCurrentTrack] = useState<MusicTrack | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [volume] = useState(0.7);
   const audioRef = useRef<HTMLAudioElement>(null);
+
 
   // Teleport to mouse when teleportTrigger changes (only if not dragging)
   useEffect(() => {
@@ -45,12 +60,13 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ tracks, onLayoutToggle, viewM
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
     const handleEnded = () => {
-      setIsPlaying(false);
+      onPlayingChange(false);
     };
 
     audio.addEventListener('ended', handleEnded);
@@ -60,21 +76,22 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ tracks, onLayoutToggle, viewM
     };
   }, [currentTrack]);
 
-  const playTrack = (track: MusicTrack) => {
-    if (currentTrack?.id === track.id) {
-      togglePlayPause();
-    } else {
-      setCurrentTrack(track);
-      setIsPlaying(true);
-    }
+  // Use the prop function instead of local playTrack
+  const handleTrackClick = (track: MusicTrack) => {
+    onTrackPlay(track);
   };
 
   useEffect(() => {
     const audio = audioRef.current;
     if (audio && currentTrack && isPlaying) {
       audio.play().catch(console.error);
+    } else if (audio) {
+      audio.pause();
+      if (!currentTrack) {
+        audio.src = ''; // Clear the audio source when no track
+      }
     }
-  }, [currentTrack]);
+  }, [currentTrack, isPlaying]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -83,17 +100,6 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ tracks, onLayoutToggle, viewM
     }
   }, [volume]);
 
-  const togglePlayPause = () => {
-    const audio = audioRef.current;
-    if (!audio || !currentTrack) return;
-
-    if (isPlaying) {
-      audio.pause();
-    } else {
-      audio.play();
-    }
-    setIsPlaying(!isPlaying);
-  };
 
 
 
@@ -171,8 +177,8 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ tracks, onLayoutToggle, viewM
         ref={audioRef} 
         src={currentTrack?.path} 
         loop
-        onPlay={() => setIsPlaying(true)}
-        onPause={() => setIsPlaying(false)}
+        onPlay={() => onPlayingChange(true)}
+        onPause={() => onPlayingChange(false)}
       />
       
       {isVisible && (
@@ -191,7 +197,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ tracks, onLayoutToggle, viewM
               <div 
                 key={track.id}
                 className={`track-item ${currentTrack?.id === track.id ? 'active' : ''}`}
-                onClick={() => playTrack(track)}
+                onClick={() => handleTrackClick(track)}
               >
                 <div className="track-controls">
                   {currentTrack?.id === track.id && isPlaying ? '■' : '▶'}

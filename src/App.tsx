@@ -7,7 +7,7 @@ import StaticImageDisplay from './components/StaticImageDisplay';
 import MusicPlayer from './components/MusicPlayer';
 import Lightbox from './components/Lightbox';
 import { gifs, musicTracks, combinedMedia, staticImages } from './data';
-import { GifItem, MediaItem } from './types';
+import { GifItem, MediaItem, MusicTrack } from './types';
 import './App.css';
 
 function App() {
@@ -20,6 +20,10 @@ function App() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [teleportTrigger] = useState(0);
   const [imageRefreshKey, setImageRefreshKey] = useState(0);
+
+  // Music player state
+  const [currentTrack, setCurrentTrack] = useState<MusicTrack | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -126,11 +130,16 @@ function App() {
     });
   };
 
-  // Handle A/D and arrow keys for layout navigation, R for refresh
+  // Handle A/D and arrow keys for layout navigation, R for refresh, and 1-4 for music
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't handle keys if typing in input fields
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
       if (isLightboxOpen) return;
-      
+
       if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') {
         toggleLayout('backward');
       } else if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') {
@@ -138,12 +147,19 @@ function App() {
       } else if (e.key === 'r' || e.key === 'R') {
         // Refresh images by incrementing the key - forces re-render without affecting music
         setImageRefreshKey(prev => prev + 1);
+      } else if (e.key >= '1' && e.key <= '4') {
+        // Music track shortcuts - work regardless of music player visibility
+        const trackIndex = parseInt(e.key) - 1;
+        if (musicTracks[trackIndex]) {
+          playTrack(musicTracks[trackIndex]);
+          e.preventDefault();
+        }
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isLightboxOpen, toggleLayout]);
+  }, [isLightboxOpen, toggleLayout, musicTracks]);
 
 
   const openLightbox = (gif: GifItem) => {
@@ -167,6 +183,22 @@ function App() {
 
   const handleMusicPlayerDismiss = () => {
     setIsMusicPlayerVisible(false);
+  };
+
+  // Music control functions
+  const playTrack = (track: MusicTrack) => {
+    if (currentTrack?.id === track.id) {
+      // If same track, stop it completely
+      if (isPlaying) {
+        setIsPlaying(false);
+        setCurrentTrack(null); // Stop and clear the track
+      } else {
+        setIsPlaying(true); // Resume if paused
+      }
+    } else {
+      setCurrentTrack(track);
+      setIsPlaying(true);
+    }
   };
 
   const showNextGif = () => {
@@ -210,14 +242,18 @@ function App() {
         style={{ width: `${scrollProgress}%` }}
       />
       
-<MusicPlayer 
-        tracks={musicTracks} 
+<MusicPlayer
+        tracks={musicTracks}
         onLayoutToggle={() => toggleLayout()}
         viewMode={viewMode}
         isVisible={isMusicPlayerVisible}
         mousePosition={mousePosition}
         onDismiss={handleMusicPlayerDismiss}
         teleportTrigger={teleportTrigger}
+        currentTrack={currentTrack}
+        isPlaying={isPlaying}
+        onTrackPlay={playTrack}
+        onPlayingChange={setIsPlaying}
       />
       
       <main className="main-content">
