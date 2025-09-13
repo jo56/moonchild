@@ -161,24 +161,24 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
       const containerWidth = container.clientWidth;
       const containerHeight = container.clientHeight;
 
-      // Check if we need to scroll horizontally
+      // Check if we need to scroll horizontally (consistent speed)
       const mouseXInViewport = e.clientX - containerRect.left;
       if (mouseXInViewport > containerWidth - scrollMargin) {
         // Scroll right
-        container.scrollLeft += 20;
+        container.scrollLeft += 12;
       } else if (mouseXInViewport < scrollMargin) {
         // Scroll left
-        container.scrollLeft -= 20;
+        container.scrollLeft -= 12;
       }
 
-      // Check if we need to scroll vertically
+      // Check if we need to scroll vertically (consistent speed)
       const mouseYInViewport = e.clientY - containerRect.top;
       if (mouseYInViewport > containerHeight - scrollMargin) {
         // Scroll down
-        container.scrollTop += 20;
+        container.scrollTop += 12;
       } else if (mouseYInViewport < scrollMargin) {
         // Scroll up
-        container.scrollTop -= 20;
+        container.scrollTop -= 12;
       }
 
       // Use absolute positioning so it stays in the background
