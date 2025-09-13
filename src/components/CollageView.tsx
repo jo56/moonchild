@@ -25,6 +25,8 @@ interface CanvasSize {
 const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) => {
   const [orderedGifs, setOrderedGifs] = useState<GifItem[]>(gifs);
   const [customPositions, setCustomPositions] = useState<Record<string, {x: number, y: number}>>({});
+  const [imageZIndices, setImageZIndices] = useState<Record<string, number>>({});
+  const [nextZIndex, setNextZIndex] = useState(100); // Start at 100 to allow room below
   const [canvasSize, setCanvasSize] = useState<CanvasSize>({
     width: Math.max(window.innerWidth * 10, 10000),
     height: Math.max(window.innerHeight * 10, 10000)
@@ -185,14 +187,26 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
       element.style.setProperty('position', 'absolute', 'important');
       element.style.setProperty('left', newX + 'px', 'important');
       element.style.setProperty('top', newY + 'px', 'important');
-      element.style.setProperty('z-index', '9999', 'important');
+      element.style.setProperty('z-index', '10000', 'important'); // Higher z-index for dragged item
       element.style.setProperty('transform', 'none', 'important');
       element.style.setProperty('pointer-events', 'none', 'important');
     };
 
     const handleMouseUp = () => {
-      // Reset pointer events
+      // Get the GIF ID for this element
+      const gifId = orderedGifs[index].id;
+
+      // Assign this image the next highest z-index (bringing it to front permanently)
+      const newZIndex = nextZIndex;
+      setImageZIndices(prev => ({
+        ...prev,
+        [gifId]: newZIndex
+      }));
+      setNextZIndex(prev => prev + 1);
+
+      // Reset pointer events and set the new z-index
       element.style.setProperty('pointer-events', 'auto', 'important');
+      element.style.setProperty('z-index', newZIndex.toString(), 'important');
 
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
@@ -242,7 +256,23 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
 
 
   const getDragStyle = (index: number): React.CSSProperties => {
-    // Simple - no complex state management
+    const gif = orderedGifs[index];
+    const customPos = customPositions[gif.id];
+    const zIndex = imageZIndices[gif.id];
+
+    // If has a custom stored position (large variant only)
+    if (customPos && variant === 'large') {
+      return {
+        position: 'absolute' as const,
+        left: `${customPos.x}px`,
+        top: `${customPos.y}px`,
+        zIndex: zIndex || 1, // Use stored z-index or default to 1
+        transform: 'none',
+        width: 'auto',
+        height: 'auto'
+      };
+    }
+
     return {};
   };
 
