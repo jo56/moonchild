@@ -151,10 +151,10 @@
   .music-player {
     position: relative;
     top: auto;
-    left: auto;
-    transform: none;
+    left: 50%;
+    transform: translateX(-50%);
     width: 160px;
-    margin: 10px auto 30px auto;
+    margin: 10px 0 30px 0;
     display: block;
     padding: 8px;
   }
