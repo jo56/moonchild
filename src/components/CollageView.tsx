@@ -133,12 +133,14 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
     const offsetY = e.clientY - rect.top;
 
     const handleMouseMove = (e: MouseEvent) => {
-      // Use simple viewport coordinates
-      const newX = e.clientX - offsetX;
-      const newY = e.clientY - offsetY;
+      // Calculate position relative to the document/canvas
+      const scrollLeft = container.scrollLeft;
+      const scrollTop = container.scrollTop;
+      const newX = e.clientX - containerRect.left + scrollLeft - offsetX;
+      const newY = e.clientY - containerRect.top + scrollTop - offsetY;
 
-      // Force override all CSS
-      element.style.setProperty('position', 'fixed', 'important');
+      // Use absolute positioning so it stays in the background
+      element.style.setProperty('position', 'absolute', 'important');
       element.style.setProperty('left', newX + 'px', 'important');
       element.style.setProperty('top', newY + 'px', 'important');
       element.style.setProperty('z-index', '9999', 'important');
