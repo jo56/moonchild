@@ -19,6 +19,7 @@ function App() {
   const [isMusicPlayerVisible, setIsMusicPlayerVisible] = useState(true);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [teleportTrigger] = useState(0);
+  const [imageRefreshKey, setImageRefreshKey] = useState(0);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -120,7 +121,7 @@ function App() {
     });
   };
 
-  // Handle A/D and arrow keys for layout navigation
+  // Handle A/D and arrow keys for layout navigation, R for refresh
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isLightboxOpen) return;
@@ -129,6 +130,9 @@ function App() {
         toggleLayout('backward');
       } else if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') {
         toggleLayout('forward');
+      } else if (e.key === 'r' || e.key === 'R') {
+        // Refresh images by incrementing the key - forces re-render without affecting music
+        setImageRefreshKey(prev => prev + 1);
       }
     };
 
@@ -212,10 +216,10 @@ function App() {
       
       <main className="main-content">
         {viewMode === 'list' ? (
-          <section className="gallery-section">
+          <section className="gallery-section" key={`list-${imageRefreshKey}`}>
             {gifs.map((gif, index) => (
               <GifDisplay 
-                key={gif.id} 
+                key={`${gif.id}-${imageRefreshKey}`} 
                 gif={gif} 
                 index={index} 
                 onClick={() => openLightbox(gif)}
@@ -224,25 +228,28 @@ function App() {
           </section>
         ) : viewMode === 'stack' ? (
           <CollageView 
+            key={`stack-${imageRefreshKey}`}
             gifs={gifs} 
             onGifClick={openLightbox}
             variant="large"
           />
         ) : viewMode === 'pinterest' ? (
           <PinterestGallery 
+            key={`pinterest-${imageRefreshKey}`}
             media={combinedMedia}
             onMediaClick={handleMediaClick}
           />
         ) : viewMode === 'irregular' ? (
           <IrregularCollage 
+            key={`irregular-${imageRefreshKey}`}
             media={combinedMedia}
             onMediaClick={handleMediaClick}
           />
         ) : viewMode === 'pics-only' ? (
-          <section className="gallery-section">
+          <section className="gallery-section" key={`pics-${imageRefreshKey}`}>
             {staticImages.map((image, index) => (
               <StaticImageDisplay 
-                key={image.id} 
+                key={`${image.id}-${imageRefreshKey}`} 
                 image={image} 
                 index={index} 
                 onClick={() => openLightbox({ id: image.id, name: image.name, path: image.path })}
@@ -251,6 +258,7 @@ function App() {
           </section>
         ) : (
           <CollageView 
+            key={`large-${imageRefreshKey}`}
             gifs={gifs} 
             onGifClick={openLightbox}
             variant="stack"
