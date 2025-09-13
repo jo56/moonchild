@@ -9,7 +9,7 @@ Iterate through the galleries using **Left/Right** or **A**/**D**.
 
 Pressing **Shift** toggles menu visibility.
 
-Press **R** to reload images in the current layout without resetting music.
+Press **R** to reload images in the current layout without resetting the music status.
 
 Use **1**,**2**,**3**,**4** to toggle the current song. Will work even without the music player visible. 
 
