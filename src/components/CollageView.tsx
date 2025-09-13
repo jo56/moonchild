@@ -24,7 +24,7 @@ interface CanvasSize {
 
 const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) => {
   const [orderedGifs, setOrderedGifs] = useState<GifItem[]>(gifs);
-  const [customPositions, setCustomPositions] = useState<Record<string, {x: number, y: number}>>({});
+  const [customPositions] = useState<Record<string, {x: number, y: number}>>({});
   const [imageZIndices, setImageZIndices] = useState<Record<string, number>>({});
   const [nextZIndex, setNextZIndex] = useState(100); // Start at 100 to allow room below
   const [canvasSize, setCanvasSize] = useState<CanvasSize>({
@@ -32,7 +32,7 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
     height: Math.max(window.innerHeight * 10, 10000)
   });
   const containerRef = useRef<HTMLDivElement>(null);
-  const [dragState, setDragState] = useState<DragState>({
+  const [dragState] = useState<DragState>({
     draggedItem: null,
     isDragging: false,
     startPos: null,
@@ -49,46 +49,6 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
     setOrderedGifs(gifs);
   }, [gifs]);
 
-  // Auto-expand canvas when items are dragged near edges (ONLY for large variant - layout1.png)
-  const expandCanvasIfNeeded = (position: { x: number; y: number }) => {
-    if (variant !== 'large') return;
-
-    const expandThreshold = 300; // Threshold from canvas edge
-    const expandAmount = 2000; // Expand by this amount
-
-    let newWidth = canvasSize.width;
-    let newHeight = canvasSize.height;
-
-    console.log('Checking canvas expansion for position:', position, 'Canvas size:', canvasSize);
-
-    // Expand to the right if we're within threshold of right edge
-    if (position.x > canvasSize.width - expandThreshold) {
-      newWidth = canvasSize.width + expandAmount;
-      console.log('Expanding right, new width:', newWidth);
-    }
-
-    // Expand down if we're within threshold of bottom edge
-    if (position.y > canvasSize.height - expandThreshold) {
-      newHeight = canvasSize.height + expandAmount;
-      console.log('Expanding down, new height:', newHeight);
-    }
-
-    // Also expand if we're dragging beyond current canvas bounds
-    if (position.x > canvasSize.width) {
-      newWidth = Math.max(newWidth, position.x + expandAmount);
-      console.log('Expanding beyond right edge, new width:', newWidth);
-    }
-
-    if (position.y > canvasSize.height) {
-      newHeight = Math.max(newHeight, position.y + expandAmount);
-      console.log('Expanding beyond bottom edge, new height:', newHeight);
-    }
-
-    if (newWidth !== canvasSize.width || newHeight !== canvasSize.height) {
-      console.log('Expanding canvas from', canvasSize.width, 'x', canvasSize.height, 'to', newWidth, 'x', newHeight);
-      setCanvasSize({ width: newWidth, height: newHeight });
-    }
-  };
 
   const getContainerClass = () => {
     switch (variant) {
@@ -325,15 +285,15 @@ const CollageView: React.FC<CollageViewProps> = ({ gifs, onGifClick, variant }) 
               style={{
                 ...dragStyle,
                 ...(isDragged && variant === 'large' ? {
-                  position: 'absolute !important',
-                  left: `${dragStyle.left} !important`,
-                  top: `${dragStyle.top} !important`,
+                  position: 'absolute' as const,
+                  left: dragStyle.left,
+                  top: dragStyle.top,
                   zIndex: 1000,
-                  transform: 'none !important',
-                  width: 'auto !important',
-                  height: 'auto !important',
-                  right: 'auto !important',
-                  bottom: 'auto !important'
+                  transform: 'none',
+                  width: 'auto',
+                  height: 'auto',
+                  right: 'auto',
+                  bottom: 'auto'
                 } : {}),
                 pointerEvents: 'auto'
               }}
