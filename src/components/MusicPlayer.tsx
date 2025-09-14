@@ -31,7 +31,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
   const [position, setPosition] = useState({ x: window.innerWidth - 180, y: 20 });
   const [hasBeenMoved, setHasBeenMoved] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [dragStart] = useState({ x: 0, y: 0 });
   const playerRef = useRef<HTMLDivElement>(null);
   const [volume] = useState(0.7);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -177,27 +177,6 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
 
 
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    const target = e.target as HTMLElement;
-    
-    // Don't start dragging if clicking on interactive elements
-    if (target.tagName === 'BUTTON' || 
-        target.tagName === 'INPUT' || 
-        target.closest('button') || 
-        target.closest('input') ||
-        target.classList.contains('track-item') ||
-        target.classList.contains('volume-control') ||
-        target.classList.contains('progress-bar') ||
-        target.classList.contains('volume-slider')) {
-      return;
-    }
-
-    setIsDragging(true);
-    setDragStart({
-      x: e.clientX - position.x,
-      y: e.clientY - position.y
-    });
-  };
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -257,9 +236,8 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
               left: position.x,
               top: position.y
             } : {}),
-            cursor: isDragging ? 'grabbing' : 'grab'
+            cursor: 'default'
           }}
-          onMouseDown={handleMouseDown}
         >
           <div className="track-list">
             {tracks.map((track) => (

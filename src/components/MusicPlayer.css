@@ -7,7 +7,7 @@
   padding: 4px;
   z-index: 1000;
   font-family: 'Courier New', monospace;
-  cursor: grab;
+  cursor: default;
   user-select: none;
 }
 
