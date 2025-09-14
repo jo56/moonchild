@@ -35,6 +35,10 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
   const playerRef = useRef<HTMLDivElement>(null);
   const [volume] = useState(0.7);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const audioBufferRef = useRef<AudioBuffer | null>(null);
+  const sourceNodeRef = useRef<AudioBufferSourceNode | null>(null);
+  const gainNodeRef = useRef<GainNode | null>(null);
 
 
   // Teleport to mouse when teleportTrigger changes (only if not dragging)
@@ -61,42 +65,96 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
   }, []);
 
 
+  // Web Audio API setup for gapless looping
   useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    const handleEnded = () => {
-      onPlayingChange(false);
+    const initAudioContext = async () => {
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        gainNodeRef.current = audioContextRef.current.createGain();
+        gainNodeRef.current.connect(audioContextRef.current.destination);
+        gainNodeRef.current.gain.value = volume;
+      }
     };
 
-    audio.addEventListener('ended', handleEnded);
+    const loadAudioBuffer = async (url: string) => {
+      try {
+        const response = await fetch(url);
+        const arrayBuffer = await response.arrayBuffer();
+        const audioBuffer = await audioContextRef.current!.decodeAudioData(arrayBuffer);
+        audioBufferRef.current = audioBuffer;
+      } catch (error) {
+        console.error('Error loading audio:', error);
+      }
+    };
+
+    if (currentTrack) {
+      initAudioContext().then(() => {
+        loadAudioBuffer(currentTrack.path);
+      });
+    }
 
     return () => {
-      audio.removeEventListener('ended', handleEnded);
+      if (sourceNodeRef.current) {
+        sourceNodeRef.current.stop();
+        sourceNodeRef.current = null;
+      }
     };
-  }, [currentTrack]);
+  }, [currentTrack, volume]);
 
   // Use the prop function instead of local playTrack
   const handleTrackClick = (track: MusicTrack) => {
     onTrackPlay(track);
   };
 
+  // Gapless playback control
   useEffect(() => {
-    const audio = audioRef.current;
-    if (audio && currentTrack && isPlaying) {
-      audio.play().catch(console.error);
-    } else if (audio) {
-      audio.pause();
-      if (!currentTrack) {
-        audio.src = ''; // Clear the audio source when no track
+    const playGapless = () => {
+      if (!audioContextRef.current || !audioBufferRef.current || !gainNodeRef.current) return;
+
+      // Stop current source if playing
+      if (sourceNodeRef.current) {
+        sourceNodeRef.current.stop();
       }
+
+      // Create new source for gapless looping
+      const source = audioContextRef.current.createBufferSource();
+      source.buffer = audioBufferRef.current;
+      source.loop = true;
+      source.connect(gainNodeRef.current);
+
+      sourceNodeRef.current = source;
+      source.start(0);
+    };
+
+    const stopPlayback = () => {
+      if (sourceNodeRef.current) {
+        sourceNodeRef.current.stop();
+        sourceNodeRef.current = null;
+      }
+    };
+
+    if (currentTrack && isPlaying && audioBufferRef.current) {
+      // Resume audio context if suspended
+      if (audioContextRef.current?.state === 'suspended') {
+        audioContextRef.current.resume().then(playGapless);
+      } else {
+        playGapless();
+      }
+    } else if (!isPlaying) {
+      stopPlayback();
     }
+
+    return () => {
+      if (!isPlaying && sourceNodeRef.current) {
+        sourceNodeRef.current.stop();
+        sourceNodeRef.current = null;
+      }
+    };
   }, [currentTrack, isPlaying]);
 
   useEffect(() => {
-    const audio = audioRef.current;
-    if (audio) {
-      audio.volume = volume;
+    if (gainNodeRef.current) {
+      gainNodeRef.current.gain.value = volume;
     }
   }, [volume]);
 
@@ -173,14 +231,6 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
 
   return (
     <>
-      <audio 
-        ref={audioRef} 
-        src={currentTrack?.path} 
-        loop
-        onPlay={() => onPlayingChange(true)}
-        onPause={() => onPlayingChange(false)}
-      />
-      
       {isVisible && (
         <div 
           ref={playerRef}
