@@ -37,6 +37,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
   const audioBufferRef = useRef<AudioBuffer | null>(null);
   const sourceNodeRef = useRef<AudioBufferSourceNode | null>(null);
   const gainNodeRef = useRef<GainNode | null>(null);
+  const audioBufferCacheRef = useRef<Map<string, AudioBuffer>>(new Map());
 
 
   // Teleport to mouse when teleportTrigger changes (only if not dragging)
@@ -62,8 +63,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-
-  // Web Audio API setup for gapless looping
+  // Preload all audio files for instant playback
   useEffect(() => {
     const initAudioContext = async () => {
       if (!audioContextRef.current) {
@@ -74,44 +74,63 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
       }
     };
 
-    const loadAudioBuffer = async (url: string) => {
-      try {
-        // Stop any current playback
-        if (sourceNodeRef.current) {
-          sourceNodeRef.current.stop();
-          sourceNodeRef.current = null;
-        }
+    const preloadTrack = async (track: MusicTrack) => {
+      if (audioBufferCacheRef.current.has(track.path)) return;
 
-        const response = await fetch(url);
+      try {
+        const response = await fetch(track.path);
         const arrayBuffer = await response.arrayBuffer();
         const audioBuffer = await audioContextRef.current!.decodeAudioData(arrayBuffer);
-        audioBufferRef.current = audioBuffer;
-
-        // If we should be playing, start immediately after loading
-        if (currentTrack && isPlaying) {
-          const source = audioContextRef.current!.createBufferSource();
-          source.buffer = audioBuffer;
-          source.loop = true;
-          source.connect(gainNodeRef.current!);
-          sourceNodeRef.current = source;
-          source.start(0);
-        }
+        audioBufferCacheRef.current.set(track.path, audioBuffer);
       } catch (error) {
-        console.error('Error loading audio:', error);
+        console.error(`Error preloading ${track.path}:`, error);
       }
     };
 
+    const preloadAllTracks = async () => {
+      await initAudioContext();
+
+      // Preload all tracks in parallel
+      const preloadPromises = tracks.map(track => preloadTrack(track));
+      await Promise.all(preloadPromises);
+    };
+
+    if (tracks.length > 0) {
+      preloadAllTracks();
+    }
+  }, [tracks, volume]);
+
+  // Track selection effect - use cached buffers for instant playback
+  useEffect(() => {
+    // Stop any current playback
+    if (sourceNodeRef.current) {
+      sourceNodeRef.current.stop();
+      sourceNodeRef.current = null;
+    }
+
     if (currentTrack) {
-      initAudioContext().then(() => {
-        loadAudioBuffer(currentTrack.path);
-      });
+      // Use cached buffer for instant playback
+      const cachedBuffer = audioBufferCacheRef.current.get(currentTrack.path);
+      if (cachedBuffer) {
+        audioBufferRef.current = cachedBuffer;
+
+        // If we should be playing, start immediately
+        if (isPlaying && audioContextRef.current && gainNodeRef.current) {
+          if (audioContextRef.current.state === 'suspended') {
+            audioContextRef.current.resume();
+          }
+
+          const source = audioContextRef.current.createBufferSource();
+          source.buffer = cachedBuffer;
+          source.loop = true;
+          source.connect(gainNodeRef.current);
+          sourceNodeRef.current = source;
+          source.start(0);
+        }
+      }
     } else {
       // Clear buffer when no track selected
       audioBufferRef.current = null;
-      if (sourceNodeRef.current) {
-        sourceNodeRef.current.stop();
-        sourceNodeRef.current = null;
-      }
     }
 
     return () => {
@@ -120,7 +139,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
         sourceNodeRef.current = null;
       }
     };
-  }, [currentTrack, isPlaying, volume]);
+  }, [currentTrack, isPlaying]);
 
   // Use the prop function instead of local playTrack
   const handleTrackClick = (track: MusicTrack) => {
