@@ -26,15 +26,13 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
   teleportTrigger,
   currentTrack,
   isPlaying,
-  onTrackPlay,
-  onPlayingChange
+  onTrackPlay
 }) => {
   const [position, setPosition] = useState({ x: window.innerWidth - 180, y: 20 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const playerRef = useRef<HTMLDivElement>(null);
   const [volume] = useState(0.7);
-  const audioRef = useRef<HTMLAudioElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const audioBufferRef = useRef<AudioBuffer | null>(null);
   const sourceNodeRef = useRef<AudioBufferSourceNode | null>(null);
