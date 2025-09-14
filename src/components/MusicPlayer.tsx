@@ -29,6 +29,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
   onTrackPlay
 }) => {
   const [position, setPosition] = useState({ x: window.innerWidth - 180, y: 20 });
+  const [hasBeenMoved, setHasBeenMoved] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const playerRef = useRef<HTMLDivElement>(null);
@@ -221,10 +222,11 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
 
     const handleMouseUp = () => {
       setIsDragging(false);
-      
+      setHasBeenMoved(true); // Mark as moved after any drag
+
       // Simple dismissal logic - if dragged far off any edge
       const dismissThreshold = 50;
-      
+
       if (position.x < -dismissThreshold ||  // dragged left
           position.x > window.innerWidth - dismissThreshold ||  // dragged right
           position.y < -dismissThreshold ||  // dragged up
@@ -249,10 +251,12 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
       {isVisible && (
         <div 
           ref={playerRef}
-          className={`music-player ${isDragging ? 'dragging' : ''}`}
-          style={{ 
-            left: position.x, 
-            top: position.y,
+          className={`music-player ${isDragging ? 'dragging' : ''} ${hasBeenMoved ? 'positioned' : ''}`}
+          style={{
+            ...(hasBeenMoved ? {
+              left: position.x,
+              top: position.y
+            } : {}),
             cursor: isDragging ? 'grabbing' : 'grab'
           }}
           onMouseDown={handleMouseDown}

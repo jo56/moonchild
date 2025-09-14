@@ -276,7 +276,7 @@ function App() {
             variant="large"
           />
         ) : viewMode === 'pinterest' ? (
-          <PinterestGallery 
+          <PinterestGallery
             key={`pinterest-${imageRefreshKey}`}
             media={combinedMedia}
             onMediaClick={handleMediaClick}

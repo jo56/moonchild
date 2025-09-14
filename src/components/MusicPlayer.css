@@ -11,6 +11,12 @@
   user-select: none;
 }
 
+.music-player:not(.dragging):not(.positioned) {
+  top: 20px;
+  right: 60px;
+  left: auto !important;
+}
+
 .music-player.dragging {
   cursor: grabbing;
   opacity: 0.9;
