@@ -242,21 +242,20 @@ function App() {
         style={{ width: `${scrollProgress}%` }}
       />
       
-<MusicPlayer
-        tracks={musicTracks}
-        onLayoutToggle={() => toggleLayout()}
-        viewMode={viewMode}
-        isVisible={isMusicPlayerVisible}
-        mousePosition={mousePosition}
-        onDismiss={handleMusicPlayerDismiss}
-        teleportTrigger={teleportTrigger}
-        currentTrack={currentTrack}
-        isPlaying={isPlaying}
-        onTrackPlay={playTrack}
-        onPlayingChange={setIsPlaying}
-      />
-      
       <main className="main-content">
+        <MusicPlayer
+          tracks={musicTracks}
+          onLayoutToggle={() => toggleLayout()}
+          viewMode={viewMode}
+          isVisible={isMusicPlayerVisible}
+          mousePosition={mousePosition}
+          onDismiss={handleMusicPlayerDismiss}
+          teleportTrigger={teleportTrigger}
+          currentTrack={currentTrack}
+          isPlaying={isPlaying}
+          onTrackPlay={playTrack}
+          onPlayingChange={setIsPlaying}
+        />
         {viewMode === 'list' ? (
           <section className="gallery-section" key={`list-${imageRefreshKey}`}>
             {gifs.map((gif, index) => (
