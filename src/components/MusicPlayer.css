@@ -160,14 +160,16 @@
 /* Mobile responsiveness */
 @media (max-width: 768px) {
   .music-player {
-    position: relative;
-    top: auto;
-    left: 50%;
-    transform: translateX(-50%);
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    transform: none !important;
     width: 160px;
-    margin: 10px 0 30px 0;
-    display: block;
+    margin: 20px auto 30px auto !important;
+    display: block !important;
     padding: 8px;
+    z-index: 1000;
   }
 
   .track-list {

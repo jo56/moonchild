@@ -93,7 +93,7 @@
   }
   
   .pinterest-item {
-    border-radius: 12px;
+    border-radius: 0;
   }
   
   .pinterest-overlay {
@@ -116,6 +116,6 @@
   }
   
   .pinterest-item {
-    border-radius: 8px;
+    border-radius: 0;
   }
 }

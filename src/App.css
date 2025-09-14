@@ -274,20 +274,21 @@
 
 /* Mobile optimizations */
 @media (max-width: 768px) {
+
   .hero-title {
     font-size: clamp(2rem, 12vw, 4rem);
     letter-spacing: 0.3em;
   }
-  
+
   .hero-subtitle {
     font-size: 1rem;
   }
-  
+
   .outro-content h2 {
     font-size: 2rem;
     letter-spacing: 0.2em;
   }
-  
+
   .floating-particle {
     display: none;
   }
