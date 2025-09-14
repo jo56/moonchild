@@ -78,10 +78,26 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
 
     const loadAudioBuffer = async (url: string) => {
       try {
+        // Stop any current playback
+        if (sourceNodeRef.current) {
+          sourceNodeRef.current.stop();
+          sourceNodeRef.current = null;
+        }
+
         const response = await fetch(url);
         const arrayBuffer = await response.arrayBuffer();
         const audioBuffer = await audioContextRef.current!.decodeAudioData(arrayBuffer);
         audioBufferRef.current = audioBuffer;
+
+        // If we should be playing, start immediately after loading
+        if (currentTrack && isPlaying) {
+          const source = audioContextRef.current!.createBufferSource();
+          source.buffer = audioBuffer;
+          source.loop = true;
+          source.connect(gainNodeRef.current!);
+          sourceNodeRef.current = source;
+          source.start(0);
+        }
       } catch (error) {
         console.error('Error loading audio:', error);
       }
@@ -91,6 +107,13 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
       initAudioContext().then(() => {
         loadAudioBuffer(currentTrack.path);
       });
+    } else {
+      // Clear buffer when no track selected
+      audioBufferRef.current = null;
+      if (sourceNodeRef.current) {
+        sourceNodeRef.current.stop();
+        sourceNodeRef.current = null;
+      }
     }
 
     return () => {
@@ -99,58 +122,33 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
         sourceNodeRef.current = null;
       }
     };
-  }, [currentTrack, volume]);
+  }, [currentTrack, isPlaying, volume]);
 
   // Use the prop function instead of local playTrack
   const handleTrackClick = (track: MusicTrack) => {
     onTrackPlay(track);
   };
 
-  // Gapless playback control
+  // Handle play/pause state changes
   useEffect(() => {
-    const playGapless = () => {
-      if (!audioContextRef.current || !audioBufferRef.current || !gainNodeRef.current) return;
-
-      // Stop current source if playing
-      if (sourceNodeRef.current) {
-        sourceNodeRef.current.stop();
+    if (!isPlaying && sourceNodeRef.current) {
+      // Stop playback when paused
+      sourceNodeRef.current.stop();
+      sourceNodeRef.current = null;
+    } else if (isPlaying && audioBufferRef.current && !sourceNodeRef.current) {
+      // Start playback if we have buffer but no active source
+      if (audioContextRef.current?.state === 'suspended') {
+        audioContextRef.current.resume();
       }
 
-      // Create new source for gapless looping
-      const source = audioContextRef.current.createBufferSource();
+      const source = audioContextRef.current!.createBufferSource();
       source.buffer = audioBufferRef.current;
       source.loop = true;
-      source.connect(gainNodeRef.current);
-
+      source.connect(gainNodeRef.current!);
       sourceNodeRef.current = source;
       source.start(0);
-    };
-
-    const stopPlayback = () => {
-      if (sourceNodeRef.current) {
-        sourceNodeRef.current.stop();
-        sourceNodeRef.current = null;
-      }
-    };
-
-    if (currentTrack && isPlaying && audioBufferRef.current) {
-      // Resume audio context if suspended
-      if (audioContextRef.current?.state === 'suspended') {
-        audioContextRef.current.resume().then(playGapless);
-      } else {
-        playGapless();
-      }
-    } else if (!isPlaying) {
-      stopPlayback();
     }
-
-    return () => {
-      if (!isPlaying && sourceNodeRef.current) {
-        sourceNodeRef.current.stop();
-        sourceNodeRef.current = null;
-      }
-    };
-  }, [currentTrack, isPlaying]);
+  }, [isPlaying]);
 
   useEffect(() => {
     if (gainNodeRef.current) {
