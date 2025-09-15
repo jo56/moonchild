@@ -43,6 +43,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
   // HTML5 Audio fallback for mobile
   const fallbackAudioRef = useRef<HTMLAudioElement | null>(null);
   const [useFallbackAudio, setUseFallbackAudio] = useState(false);
+  const preloadedAudioRef = useRef<Map<string, HTMLAudioElement>>(new Map());
 
 
   // Teleport to mouse when teleportTrigger changes (only if not dragging)
@@ -86,7 +87,6 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
       // Check if the browser supports this audio format
       if (!checkAudioSupport(audioPath)) {
         console.warn(`Browser does not support audio format for ${audioPath}`);
-        // For mobile Safari with OGG files, this will likely fail
         return;
       }
 
@@ -108,19 +108,46 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
       } catch (error) {
         logMobileAudioError('preloading', error, { audioPath, trackName: track.name });
 
-        // On mobile Safari with unsupported formats, suggest alternative
         if (error instanceof DOMException && error.name === 'NotSupportedError') {
           console.error('This audio format is not supported on this device. Consider using MP3 or AAC format for mobile compatibility.');
         }
       }
     };
 
-    const preloadAllTracks = async () => {
-      await initAudioContext();
+    // Preload HTML5 audio for mobile devices
+    const preloadMobileAudio = (track: MusicTrack) => {
+      const audioPath = getMobileAudioPath(track.path);
 
-      // Preload all tracks in parallel
-      const preloadPromises = tracks.map(track => preloadTrack(track));
-      await Promise.all(preloadPromises);
+      if (preloadedAudioRef.current.has(audioPath)) return;
+
+      const audio = new Audio();
+      audio.preload = 'auto';
+      audio.loop = true;
+      audio.volume = volume;
+      audio.crossOrigin = 'anonymous';
+
+      // Set the source and start loading
+      audio.src = audioPath;
+      audio.load();
+
+      // Store the preloaded audio
+      preloadedAudioRef.current.set(audioPath, audio);
+
+      console.log(`Preloading mobile audio: ${audioPath}`);
+    };
+
+    const preloadAllTracks = async () => {
+      const isMobile = isMobileDevice();
+
+      if (isMobile) {
+        // For mobile, preload HTML5 audio elements
+        tracks.forEach(track => preloadMobileAudio(track));
+      } else {
+        // For desktop, preload Web Audio API buffers
+        await initAudioContext();
+        const preloadPromises = tracks.map(track => preloadTrack(track));
+        await Promise.all(preloadPromises);
+      }
     };
 
     if (tracks.length > 0) {
@@ -356,25 +383,39 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
     const audioPath = getMobileAudioPath(track.path);
     console.log(`Track clicked: ${track.name} (${audioPath})`);
 
-    // For mobile devices, force use of HTML5 audio fallback immediately
+    // For mobile devices, use preloaded audio for instant playback
     const isMobile = isMobileDevice();
     if (isMobile) {
-      console.log('Mobile device detected, using HTML5 audio fallback directly');
+      console.log('Mobile device detected, using preloaded HTML5 audio');
       setUseFallbackAudio(true);
 
       try {
-        // Create and play audio immediately on user interaction
-        const audio = new Audio(audioPath);
-        audio.loop = true;
-        audio.volume = volume;
-
-        // Try to play immediately
-        await audio.play();
-
-        // Store the audio element
+        // Stop current audio
         if (fallbackAudioRef.current) {
           fallbackAudioRef.current.pause();
+          fallbackAudioRef.current.currentTime = 0;
         }
+
+        // Get preloaded audio or create new one
+        let audio = preloadedAudioRef.current.get(audioPath);
+
+        if (!audio) {
+          // Fallback: create new audio if not preloaded
+          console.log('Audio not preloaded, creating new one');
+          audio = new Audio(audioPath);
+          audio.loop = true;
+          audio.volume = volume;
+          audio.load();
+        } else {
+          // Reset preloaded audio
+          audio.currentTime = 0;
+          audio.volume = volume;
+        }
+
+        // Play immediately - this should be instant with preloaded audio
+        await audio.play();
+
+        // Store the active audio element
         fallbackAudioRef.current = audio;
 
         console.log('Mobile HTML5 audio started successfully');
@@ -462,6 +503,13 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
         fallbackAudioRef.current.pause();
         fallbackAudioRef.current = null;
       }
+      // Clean up preloaded audio
+      preloadedAudioRef.current.forEach((audio) => {
+        audio.pause();
+        audio.src = '';
+      });
+      preloadedAudioRef.current.clear();
+
       if (audioContextRef.current) {
         audioContextRef.current.close();
         audioContextRef.current = null;
