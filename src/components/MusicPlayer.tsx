@@ -40,6 +40,10 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
   const gainNodeRef = useRef<GainNode | null>(null);
   const audioBufferCacheRef = useRef<Map<string, AudioBuffer>>(new Map());
 
+  // HTML5 Audio fallback for mobile
+  const fallbackAudioRef = useRef<HTMLAudioElement | null>(null);
+  const [useFallbackAudio, setUseFallbackAudio] = useState(false);
+
 
   // Teleport to mouse when teleportTrigger changes (only if not dragging)
   useEffect(() => {
@@ -76,15 +80,38 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
     };
 
     const preloadTrack = async (track: MusicTrack) => {
-      if (audioBufferCacheRef.current.has(track.path)) return;
+      const audioPath = getMobileAudioPath(track.path);
+      if (audioBufferCacheRef.current.has(audioPath)) return;
+
+      // Check if the browser supports this audio format
+      if (!checkAudioSupport(audioPath)) {
+        console.warn(`Browser does not support audio format for ${audioPath}`);
+        // For mobile Safari with OGG files, this will likely fail
+        return;
+      }
 
       try {
-        const response = await fetch(track.path);
+        console.log(`Preloading track: ${audioPath}`);
+        const response = await fetch(audioPath);
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
         const arrayBuffer = await response.arrayBuffer();
+        console.log(`Fetched ${arrayBuffer.byteLength} bytes for ${audioPath}`);
+
         const audioBuffer = await audioContextRef.current!.decodeAudioData(arrayBuffer);
-        audioBufferCacheRef.current.set(track.path, audioBuffer);
+        console.log(`Successfully decoded audio for ${audioPath}, duration: ${audioBuffer.duration}s`);
+
+        audioBufferCacheRef.current.set(audioPath, audioBuffer);
       } catch (error) {
-        console.error(`Error preloading ${track.path}:`, error);
+        logMobileAudioError('preloading', error, { audioPath, trackName: track.name });
+
+        // On mobile Safari with unsupported formats, suggest alternative
+        if (error instanceof DOMException && error.name === 'NotSupportedError') {
+          console.error('This audio format is not supported on this device. Consider using MP3 or AAC format for mobile compatibility.');
+        }
       }
     };
 
@@ -103,30 +130,58 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
 
   // Track selection effect - use cached buffers for instant playback
   useEffect(() => {
-    // Stop any current playback
-    if (sourceNodeRef.current) {
+    // Stop any current playback immediately and synchronously
+    if (useFallbackAudio) {
+      stopFallbackAudio();
+    } else if (sourceNodeRef.current) {
       sourceNodeRef.current.stop();
       sourceNodeRef.current = null;
     }
 
     if (currentTrack) {
-      // Use cached buffer for instant playback
-      const cachedBuffer = audioBufferCacheRef.current.get(currentTrack.path);
-      if (cachedBuffer) {
-        audioBufferRef.current = cachedBuffer;
+      const audioPath = getMobileAudioPath(currentTrack.path);
 
-        // If we should be playing, start immediately
-        if (isPlaying && audioContextRef.current && gainNodeRef.current) {
-          if (audioContextRef.current.state === 'suspended') {
-            audioContextRef.current.resume();
+      if (useFallbackAudio) {
+        // For fallback audio, just prepare the path - playback is handled in play/pause effect
+        if (isPlaying) {
+          playFallbackAudio(audioPath).catch(error => {
+            console.error('Failed to start fallback audio on track change:', error);
+          });
+        }
+      } else {
+        // Use cached buffer for instant playback with Web Audio API
+        const cachedBuffer = audioBufferCacheRef.current.get(audioPath);
+        if (cachedBuffer) {
+          audioBufferRef.current = cachedBuffer;
+
+          // If we should be playing, start playback
+          if (isPlaying && audioContextRef.current && gainNodeRef.current) {
+            const startTrackPlayback = async () => {
+              // Ensure AudioContext is activated for mobile
+              const success = await activateAudioContext();
+
+              if (!success) {
+                console.warn('AudioContext activation failed on track change, switching to fallback');
+                setUseFallbackAudio(true);
+                await playFallbackAudio(audioPath);
+                return;
+              }
+
+              // Verify AudioContext is running and we still have the same track
+              if (audioContextRef.current!.state === 'running' &&
+                  audioBufferRef.current === cachedBuffer &&
+                  currentTrack && isPlaying) {
+                const source = audioContextRef.current!.createBufferSource();
+                source.buffer = cachedBuffer;
+                source.loop = true;
+                source.connect(gainNodeRef.current!);
+                sourceNodeRef.current = source;
+                source.start(0);
+              }
+            };
+
+            startTrackPlayback();
           }
-
-          const source = audioContextRef.current.createBufferSource();
-          source.buffer = cachedBuffer;
-          source.loop = true;
-          source.connect(gainNodeRef.current);
-          sourceNodeRef.current = source;
-          source.start(0);
         }
       }
     } else {
@@ -135,44 +190,284 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
     }
 
     return () => {
-      if (sourceNodeRef.current) {
+      if (useFallbackAudio) {
+        stopFallbackAudio();
+      } else if (sourceNodeRef.current) {
         sourceNodeRef.current.stop();
         sourceNodeRef.current = null;
       }
     };
-  }, [currentTrack, isPlaying]);
+  }, [currentTrack, isPlaying, useFallbackAudio]);
+
+  // Mobile audio context activation - needed for iOS/mobile browsers
+  const activateAudioContext = async (): Promise<boolean> => {
+    try {
+      // Create AudioContext if it doesn't exist
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        gainNodeRef.current = audioContextRef.current.createGain();
+        gainNodeRef.current.connect(audioContextRef.current.destination);
+        gainNodeRef.current.gain.value = volume;
+      }
+
+      // Try to resume if suspended
+      if (audioContextRef.current.state === 'suspended') {
+        await audioContextRef.current.resume();
+      }
+
+      const isRunning = audioContextRef.current.state === 'running';
+      console.log('AudioContext activation result:', {
+        state: audioContextRef.current.state,
+        isRunning,
+        isMobile: isMobileDevice()
+      });
+
+
+      return isRunning;
+    } catch (error) {
+      logMobileAudioError('AudioContext activation', error);
+      return false;
+    }
+  };
+
+  // Check if device is mobile with detailed detection
+  const isMobileDevice = (): boolean => {
+    const mobileRegex = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
+    const isMobile = mobileRegex.test(navigator.userAgent);
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+    // Log for debugging
+    if (isMobile || isTouchDevice) {
+      console.log('Mobile device detected:', {
+        userAgent: navigator.userAgent,
+        isMobile,
+        isTouchDevice,
+        maxTouchPoints: navigator.maxTouchPoints,
+        platform: navigator.platform,
+        screenWidth: screen.width,
+        windowWidth: window.innerWidth
+      });
+    }
+
+    return isMobile || isTouchDevice;
+  };
+
+  // Enhanced error logging for mobile debugging
+  const logMobileAudioError = (context: string, error: any, additionalInfo?: any) => {
+    const errorInfo = {
+      context,
+      error: error.message || error,
+      errorType: error.constructor.name,
+      isMobile: isMobileDevice(),
+      audioContextState: audioContextRef.current?.state,
+      userAgent: navigator.userAgent,
+      timestamp: new Date().toISOString(),
+      ...additionalInfo
+    };
+
+    console.error('Mobile Audio Error:', errorInfo);
+
+    // Store error info for debugging
+    if (typeof window !== 'undefined') {
+      (window as any).lastMobileAudioError = errorInfo;
+    }
+  };
+
+  // Convert audio path to mobile-friendly format (m4a) if on mobile
+  const getMobileAudioPath = (originalPath: string): string => {
+    if (isMobileDevice() && originalPath.endsWith('.ogg')) {
+      return originalPath.replace('.ogg', '.m4a');
+    }
+    return originalPath;
+  };
+
+  // Check if browser supports the audio format
+  const checkAudioSupport = (audioPath: string): boolean => {
+    const audio = new Audio();
+    const extension = audioPath.split('.').pop()?.toLowerCase();
+
+    switch (extension) {
+      case 'ogg':
+        return audio.canPlayType('audio/ogg') !== '';
+      case 'mp3':
+        return audio.canPlayType('audio/mpeg') !== '';
+      case 'wav':
+        return audio.canPlayType('audio/wav') !== '';
+      case 'aac':
+        return audio.canPlayType('audio/aac') !== '';
+      case 'm4a':
+        return audio.canPlayType('audio/mp4') !== '';
+      default:
+        return false;
+    }
+  };
+
+  // Initialize fallback HTML5 audio element
+  const initFallbackAudio = (audioPath: string) => {
+    if (fallbackAudioRef.current) {
+      fallbackAudioRef.current.pause();
+      fallbackAudioRef.current.currentTime = 0;
+    }
+
+    const audio = new Audio(audioPath);
+    audio.loop = true;
+    audio.volume = volume;
+
+    // Add mobile-specific attributes
+    audio.preload = 'auto';
+    audio.crossOrigin = 'anonymous';
+
+    fallbackAudioRef.current = audio;
+
+    return audio;
+  };
+
+  // Play using fallback HTML5 audio
+  const playFallbackAudio = async (audioPath: string): Promise<boolean> => {
+    try {
+      const audio = initFallbackAudio(audioPath);
+
+      // Wait for audio to be ready
+      await new Promise((resolve, reject) => {
+        audio.addEventListener('canplaythrough', resolve, { once: true });
+        audio.addEventListener('error', reject, { once: true });
+        audio.load();
+      });
+
+      await audio.play();
+      console.log('Fallback HTML5 audio started successfully');
+      return true;
+    } catch (error) {
+      logMobileAudioError('fallback audio playback', error, { audioPath });
+      return false;
+    }
+  };
+
+  // Stop fallback audio
+  const stopFallbackAudio = () => {
+    if (fallbackAudioRef.current) {
+      fallbackAudioRef.current.pause();
+      fallbackAudioRef.current.currentTime = 0;
+    }
+  };
 
   // Use the prop function instead of local playTrack
-  const handleTrackClick = (track: MusicTrack) => {
-    onTrackPlay(track);
+  const handleTrackClick = async (track: MusicTrack) => {
+    const audioPath = getMobileAudioPath(track.path);
+    console.log(`Track clicked: ${track.name} (${audioPath})`);
+
+    // For mobile devices, force use of HTML5 audio fallback immediately
+    const isMobile = isMobileDevice();
+    if (isMobile) {
+      console.log('Mobile device detected, using HTML5 audio fallback directly');
+      setUseFallbackAudio(true);
+
+      try {
+        // Create and play audio immediately on user interaction
+        const audio = new Audio(audioPath);
+        audio.loop = true;
+        audio.volume = volume;
+
+        // Try to play immediately
+        await audio.play();
+
+        // Store the audio element
+        if (fallbackAudioRef.current) {
+          fallbackAudioRef.current.pause();
+        }
+        fallbackAudioRef.current = audio;
+
+        console.log('Mobile HTML5 audio started successfully');
+        onTrackPlay(track);
+        return;
+      } catch (error) {
+        console.error('Mobile audio failed:', error);
+        alert('Unable to play audio. Please ensure your browser allows audio playback.');
+        return;
+      }
+    }
+
+    // Desktop - use Web Audio API
+    try {
+      await activateAudioContext();
+      onTrackPlay(track);
+    } catch (error) {
+      console.error('Desktop audio failed:', error);
+    }
   };
 
   // Handle play/pause state changes
   useEffect(() => {
-    if (!isPlaying && sourceNodeRef.current) {
+    if (!isPlaying) {
       // Stop playback when paused
-      sourceNodeRef.current.stop();
-      sourceNodeRef.current = null;
-    } else if (isPlaying && audioBufferRef.current && !sourceNodeRef.current) {
-      // Start playback if we have buffer but no active source
-      if (audioContextRef.current?.state === 'suspended') {
-        audioContextRef.current.resume();
+      if (useFallbackAudio && fallbackAudioRef.current) {
+        fallbackAudioRef.current.pause();
+      } else if (sourceNodeRef.current) {
+        sourceNodeRef.current.stop();
+        sourceNodeRef.current = null;
       }
-
-      const source = audioContextRef.current!.createBufferSource();
-      source.buffer = audioBufferRef.current;
-      source.loop = true;
-      source.connect(gainNodeRef.current!);
-      sourceNodeRef.current = source;
-      source.start(0);
+      return;
     }
-  }, [isPlaying]);
+
+    if (isPlaying && currentTrack) {
+      // Start playback
+      if (useFallbackAudio && fallbackAudioRef.current) {
+        // Resume HTML5 audio
+        fallbackAudioRef.current.play().catch(error => {
+          console.error('Failed to resume fallback audio:', error);
+        });
+      } else if (audioBufferRef.current && !sourceNodeRef.current && !useFallbackAudio) {
+        // Use Web Audio API for desktop
+        const startPlayback = async () => {
+          const success = await activateAudioContext();
+          if (!success) {
+            console.warn('AudioContext activation failed');
+            return;
+          }
+
+          if (!isPlaying || sourceNodeRef.current) {
+            return;
+          }
+
+          const source = audioContextRef.current!.createBufferSource();
+          source.buffer = audioBufferRef.current!;
+          source.loop = true;
+          source.connect(gainNodeRef.current!);
+          sourceNodeRef.current = source;
+          source.start(0);
+        };
+
+        startPlayback();
+      }
+    }
+  }, [isPlaying, currentTrack, useFallbackAudio]);
 
   useEffect(() => {
     if (gainNodeRef.current) {
       gainNodeRef.current.gain.value = volume;
     }
+    if (fallbackAudioRef.current) {
+      fallbackAudioRef.current.volume = volume;
+    }
   }, [volume]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (sourceNodeRef.current) {
+        sourceNodeRef.current.stop();
+        sourceNodeRef.current = null;
+      }
+      if (fallbackAudioRef.current) {
+        fallbackAudioRef.current.pause();
+        fallbackAudioRef.current = null;
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+        audioContextRef.current = null;
+      }
+    };
+  }, []);
 
 
 
@@ -255,11 +550,11 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
 
           <div className="layout-toggle">
             <button className="toggle-btn" onClick={onLayoutToggle}>
-              {viewMode === 'list' ? '⧪' : 
-               viewMode === 'stack' ? '▦' : 
-               viewMode === 'large-list' ? '◈' : 
-               viewMode === 'irregular' ? '⧻' : 
-               viewMode === 'pics-only' ? '⧮' : 
+              {viewMode === 'list' ? '⧪' :
+               viewMode === 'stack' ? '▦' :
+               viewMode === 'large-list' ? '◈' :
+               viewMode === 'irregular' ? '⧻' :
+               viewMode === 'pics-only' ? '⧮' :
                viewMode === 'pinterest' ? '☰' : '☰'}
             </button>
           </div>

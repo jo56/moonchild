@@ -79,6 +79,7 @@
   margin-bottom: 0;
   border-top: none;
   padding-top: 0;
+  position: relative;
 }
 
 .toggle-btn {
@@ -106,6 +107,7 @@
 .toggle-btn:focus {
   outline: none;
 }
+
 
 .volume-control {
   margin-bottom: 4px;
@@ -166,11 +168,11 @@
   .music-player {
     position: relative !important;
     top: auto !important;
-    left: auto !important;
+    left: 50% !important;
     right: auto !important;
-    transform: none !important;
+    transform: translateX(-50%) !important;
     width: 160px;
-    margin: 20px auto 30px auto !important;
+    margin: 20px 0 30px 0 !important;
     display: block !important;
     padding: 8px;
     z-index: 1000;
@@ -234,4 +236,5 @@
   .volume-slider::-moz-range-track {
     height: 6px;
   }
+
 }
