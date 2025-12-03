@@ -2,18 +2,20 @@
   import { onMount } from 'svelte';
   import type { MediaItem } from '../types';
 
-  export let media: MediaItem[];
-  export let onMediaClick: (mediaItem: MediaItem) => void;
+  interface Props {
+    media: MediaItem[];
+    onMediaClick: (mediaItem: MediaItem) => void;
+  }
+
+  let { media, onMediaClick }: Props = $props();
 
   interface MediaWithHeight extends MediaItem {
     height: number;
-    loaded: boolean;
   }
 
-  let mediaWithHeights: MediaWithHeight[] = [];
-  let columns = 3;
-  let containerRef: HTMLDivElement;
-  let mounted = false;
+  let mediaWithHeights = $state<MediaWithHeight[]>([]);
+  let columns = $state(3);
+  let containerRef: HTMLDivElement | undefined = $state();
 
   function shuffleArray<T>(array: T[]): T[] {
     const shuffled = [...array];
@@ -57,8 +59,7 @@
       const height = await loadMediaHeight(item);
       return {
         ...item,
-        height,
-        loaded: true
+        height
       };
     });
 
@@ -66,25 +67,19 @@
     mediaWithHeights = loadedMedia;
   }
 
-  function getColumnItems(columnIndex: number) {
-    return mediaWithHeights.filter((_, index) => index % columns === columnIndex);
-  }
+  let columnItems = $derived(
+    Array.from({ length: columns }, (_, columnIndex) =>
+      mediaWithHeights.filter((_, index) => index % columns === columnIndex)
+    )
+  );
 
   function handleMediaClick(mediaItem: MediaItem) {
     onMediaClick(mediaItem);
   }
 
-  // Only load media after component is mounted to ensure proper timing
-  $: if (mounted && media && media.length > 0) {
-    loadAllMedia().then(() => {
-      // Recalculate columns after media loads to ensure proper layout
-      calculateColumns();
-    });
-  }
-
   onMount(() => {
-    mounted = true;
     calculateColumns();
+    loadAllMedia();
 
     const handleResize = () => {
       calculateColumns();
@@ -99,13 +94,13 @@
   <div class="pinterest-columns" style="--columns: {columns}">
     {#each Array(columns) as _, columnIndex}
       <div class="pinterest-column">
-        {#each getColumnItems(columnIndex) as item (item.id)}
-          <!-- svelte-ignore a11y-click-events-have-key-events -->
-          <!-- svelte-ignore a11y-no-static-element-interactions -->
+        {#each columnItems[columnIndex] || [] as item (item.id)}
+          <!-- svelte-ignore a11y_click_events_have_key_events -->
+          <!-- svelte-ignore a11y_no_static_element_interactions -->
           <div
             class="pinterest-item"
             style="height: {item.height}px"
-            on:click={() => handleMediaClick(item)}
+            onclick={() => handleMediaClick(item)}
           >
             <div class="pinterest-media-wrapper">
               <img
