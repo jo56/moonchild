@@ -18,6 +18,7 @@
   let hasBeenMoved = false;
   let isDragging = false;
   let dragStart = { x: 0, y: 0 };
+  let lastTeleportTrigger = 0;
   let playerRef: HTMLDivElement;
   let audioContext: AudioContext | null = null;
   let gainNode: GainNode | null = null;
@@ -420,8 +421,9 @@
     };
   }
 
-  // Teleport to mouse when teleportTrigger changes
-  $: if (teleportTrigger > 0 && mousePosition.x > 0 && !isDragging) {
+  // Teleport to mouse when teleportTrigger changes (only when it actually increases)
+  $: if (teleportTrigger > lastTeleportTrigger && mousePosition.x > 0 && !isDragging) {
+    lastTeleportTrigger = teleportTrigger;
     position = {
       x: Math.max(10, Math.min(mousePosition.x - 100, window.innerWidth - 220)),
       y: Math.max(10, Math.min(mousePosition.y - 50, window.innerHeight - 100))
@@ -489,6 +491,7 @@
           class="track-item"
           class:active={currentTrack?.id === track.id && isPlaying}
           on:click={() => handleTrackClick(track)}
+          on:mousedown|stopPropagation
         >
           <span class="track-controls">
             {currentTrack?.id === track.id && isPlaying ? '■' : '▶'}
@@ -497,7 +500,7 @@
       {/each}
     </div>
     <div class="layout-toggle">
-      <button class="toggle-btn" on:click={onLayoutToggle}>
+      <button class="toggle-btn" on:click={onLayoutToggle} on:mousedown|stopPropagation>
         {viewModeSymbol}
       </button>
     </div>
