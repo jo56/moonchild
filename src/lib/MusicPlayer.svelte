@@ -97,7 +97,8 @@
     return path;
   };
 
-  const getViewModeSymbol = () => {
+  // Reactive symbol that updates when viewMode changes
+  $: viewModeSymbol = (() => {
     switch (viewMode) {
       case 'list': return '⧪';
       case 'stack': return '▦';
@@ -107,7 +108,7 @@
       case 'pinterest': return '☰';
       default: return '☰';
     }
-  };
+  })();
 
   // Mobile audio context activation - needed for iOS/mobile browsers
   const activateAudioContext = async (): Promise<boolean> => {
@@ -478,7 +479,7 @@
     class="music-player"
     class:dragging={isDragging}
     class:positioned={hasBeenMoved}
-    style={!isMobileDevice() ? (hasBeenMoved ? `left: ${position.x}px; top: ${position.y}px;` : `top: 20px; right: 60px; left: auto;`) : ''}
+    style={hasBeenMoved && !isMobileDevice() ? `left: ${position.x}px; top: ${position.y}px;` : ''}
     on:mousedown={handleMouseDown}
     role="presentation"
   >
@@ -497,7 +498,7 @@
     </div>
     <div class="layout-toggle">
       <button class="toggle-btn" on:click={onLayoutToggle}>
-        {getViewModeSymbol()}
+        {viewModeSymbol}
       </button>
     </div>
   </div>
