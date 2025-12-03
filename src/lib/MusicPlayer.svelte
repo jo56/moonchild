@@ -478,7 +478,7 @@
     class="music-player"
     class:dragging={isDragging}
     class:positioned={hasBeenMoved}
-    style={!isMobileDevice() && hasBeenMoved ? `left: ${position.x}px; top: ${position.y}px;` : ''}
+    style={!isMobileDevice() ? (hasBeenMoved ? `left: ${position.x}px; top: ${position.y}px;` : `top: 20px; right: 60px; left: auto;`) : ''}
     on:mousedown={handleMouseDown}
     role="presentation"
   >

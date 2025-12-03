@@ -13,6 +13,7 @@
   let mediaWithHeights: MediaWithHeight[] = [];
   let columns = 3;
   let containerRef: HTMLDivElement;
+  let mounted = false;
 
   function shuffleArray<T>(array: T[]): T[] {
     const shuffled = [...array];
@@ -73,8 +74,16 @@
     onMediaClick(mediaItem);
   }
 
+  // Only load media after component is mounted to ensure proper timing
+  $: if (mounted && media && media.length > 0) {
+    loadAllMedia().then(() => {
+      // Recalculate columns after media loads to ensure proper layout
+      calculateColumns();
+    });
+  }
+
   onMount(() => {
-    loadAllMedia();
+    mounted = true;
     calculateColumns();
 
     const handleResize = () => {
