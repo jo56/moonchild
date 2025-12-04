@@ -13,9 +13,13 @@
 </script>
 
 <div class="gif-container" style="animation-delay: {animationDelay}">
-  <!-- svelte-ignore a11y-click-events-have-key-events -->
-  <!-- svelte-ignore a11y-no-static-element-interactions -->
-  <div class="gif-wrapper" on:click={onClick}>
+  <div
+    class="gif-wrapper"
+    role="button"
+    tabindex="0"
+    onclick={onClick}
+    onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick(); }}
+  >
     <img src={gif.path} alt={gif.name} class="gif-image" loading="lazy" />
     <div class="gif-overlay">
       <h3 class="gif-title">{gif.name}</h3>

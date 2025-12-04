@@ -30,6 +30,7 @@
   let dragStart = { x: 0, y: 0 };
   let dragStartPos = { x: 0, y: 0 };
   let hasDragged = false;
+  let hoveredItemId = $state<string | null>(null);
 
   function loadImageDimensions(
     mediaItem: MediaItem
@@ -295,9 +296,11 @@
       <!-- svelte-ignore a11y_no_static_element_interactions -->
       <div
         class="collage-media {item.type === 'gif' ? 'is-gif' : 'is-image'}"
-        style="position: absolute; left: {item.x}px; top: {item.y}px; width: {item.width}px; height: {item.height}px; z-index: {item.zIndex}; opacity: 1"
+        style="position: absolute; left: {item.x}px; top: {item.y}px; width: {item.width}px; height: {item.height}px; z-index: {hoveredItemId === item.id ? 9999 : item.zIndex}; opacity: 1"
         onmousedown={handleMouseDown}
         onclick={(e) => handleMediaClick(e, item)}
+        onmouseenter={() => hoveredItemId = item.id}
+        onmouseleave={() => hoveredItemId = null}
         role="button"
         tabindex="0"
       >

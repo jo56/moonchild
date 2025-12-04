@@ -7,10 +7,14 @@
   let { image, onClick }: Props = $props();
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="gif-container">
-  <div class="gif-wrapper" on:click={onClick}>
+  <div
+    class="gif-wrapper"
+    role="button"
+    tabindex="0"
+    onclick={onClick}
+    onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick(); }}
+  >
     <img src={image.path} alt="" class="gif-image" loading="lazy" />
   </div>
 </div>

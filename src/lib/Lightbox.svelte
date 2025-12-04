@@ -106,14 +106,22 @@
 </script>
 
 {#if isOpen && gif}
-  <!-- svelte-ignore a11y-click-events-have-key-events -->
-  <!-- svelte-ignore a11y-no-static-element-interactions -->
-  <div class="lightbox-overlay" on:click={handleOverlayClick}>
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <!-- svelte-ignore a11y-no-static-element-interactions -->
-    <div class="lightbox-container" on:click={handleContainerClick}>
+  <div
+    class="lightbox-overlay"
+    role="button"
+    tabindex="0"
+    onclick={handleOverlayClick}
+    onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleOverlayClick(); }}
+  >
+    <div
+      class="lightbox-container"
+      role="button"
+      tabindex="0"
+      onclick={handleContainerClick}
+      onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleContainerClick(e); }}
+    >
       <div class="lightbox-content">
-        <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+        <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
         <img
           bind:this={imageRef}
           src={gif.path}
@@ -121,7 +129,7 @@
           class="lightbox-image"
           class:zoomed={isZoomed}
           class:dragging={isDragging}
-          on:mousedown={handleMouseDown}
+          onmousedown={handleMouseDown}
           style="cursor: {isZoomed ? (isDragging ? 'grabbing' : 'grab') : 'zoom-in'};
                  transform: {isZoomed
             ? `scale(2) translate(${imagePosition.x / 2}px, ${imagePosition.y / 2}px)`

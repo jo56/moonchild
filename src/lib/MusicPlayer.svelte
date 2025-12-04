@@ -382,8 +382,8 @@
         <button
           class="track-item"
           class:active={currentTrack?.id === track.id && isPlaying}
-          on:click={() => handleTrackClick(track)}
-          on:mousedown|stopPropagation
+          onclick={() => handleTrackClick(track)}
+          onmousedown={(e) => e.stopPropagation()}
         >
           <span class="track-controls">
             {currentTrack?.id === track.id && isPlaying ? '■' : '▶'}
@@ -392,7 +392,7 @@
       {/each}
     </div>
     <div class="layout-toggle">
-      <button class="toggle-btn" on:click={onLayoutToggle} on:mousedown|stopPropagation>
+      <button class="toggle-btn" onclick={onLayoutToggle} onmousedown={(e) => e.stopPropagation()}>
         {viewModeSymbol}
       </button>
     </div>

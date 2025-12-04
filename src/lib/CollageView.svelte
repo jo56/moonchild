@@ -30,8 +30,10 @@
     const offsetX = e.clientX - rect.left;
     const offsetY = e.clientY - rect.top;
 
-    let lastX = 0;
-    let lastY = 0;
+    // Initialize with current position so clicking without dragging keeps image in place
+    const currentPos = imagePositions[gif.id];
+    let lastX = currentPos ? currentPos.x : parseFloat(element.style.left) || 0;
+    let lastY = currentPos ? currentPos.y : parseFloat(element.style.top) || 0;
 
     const handleMouseMove = (e: MouseEvent) => {
       const scrollLeft = container.scrollLeft;
@@ -127,8 +129,8 @@
   style={variant === 'large'
     ? 'overflow: auto; width: 100vw; height: 100vh; position: fixed; top: 0; left: 0; z-index: 10; cursor: grab;'
     : ''}
-  on:mousedown={variant === 'large' ? handleBackgroundMouseDown : undefined}
-  on:contextmenu={variant === 'large' ? (e) => e.preventDefault() : undefined}
+  onmousedown={variant === 'large' ? handleBackgroundMouseDown : undefined}
+  oncontextmenu={variant === 'large' ? (e) => e.preventDefault() : undefined}
   role="presentation"
 >
   <div
@@ -136,13 +138,11 @@
     style={variant === 'large'
       ? `width: ${canvasSize.width}px; height: ${canvasSize.height}px; position: relative; min-width: 100vw; min-height: 100vh;`
       : ''}
-    on:mousedown={handleBackgroundMouseDown}
-    on:contextmenu={(e) => e.preventDefault()}
+    onmousedown={handleBackgroundMouseDown}
+    oncontextmenu={(e) => e.preventDefault()}
     role="presentation"
   >
     {#each gifs as gif, index (gif.id)}
-      <!-- svelte-ignore a11y-no-static-element-interactions -->
-      <!-- svelte-ignore a11y-click-events-have-key-events -->
       <div
         class="collage-item {variant === 'large'
           ? `large-item large-item-${index + 1}`
@@ -150,9 +150,12 @@
         style="pointer-events: auto; z-index: {imageZIndices[gif.id] || 1};{imagePositions[gif.id]
           ? ` left: ${imagePositions[gif.id].x}px; top: ${imagePositions[gif.id].y}px; transform: none;`
           : ''}"
-        on:click={(e) => handleClick(e, gif)}
-        on:mousedown={(e) =>
+        role="button"
+        tabindex="0"
+        onclick={(e) => handleClick(e, gif)}
+        onmousedown={(e) =>
           variant === 'large' ? handleImageMouseDown(e, gif, index) : undefined}
+        onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleClick(e, gif); }}
       >
         <img src={gif.path} alt={gif.name} class="collage-image" loading="lazy" />
         <div class="collage-overlay">
