@@ -52,7 +52,6 @@
     const shuffled = shuffleArray(media);
     const canvasWidth = window.innerWidth * 3;
     const positions: PositionedMedia[] = [];
-    const occupiedAreas: { x: number; y: number; width: number; height: number }[] = [];
 
     const mediaWithDimensions = await Promise.all(
       shuffled.map(async (item) => {
@@ -114,7 +113,9 @@
       };
     });
 
-    const sortedItems = itemsWithSizes.sort((a, b) => b.area - a.area);
+    const sortedItems = shuffleArray(itemsWithSizes);
+
+    const occupiedAreas: { x: number; y: number; width: number; height: number }[] = [];
 
     const isOverlapping = (x: number, y: number, width: number, height: number) => {
       return occupiedAreas.some(area => {
@@ -123,6 +124,8 @@
         const overlapArea = overlapX * overlapY;
         const thisArea = width * height;
         const otherArea = area.width * area.height;
+
+        // Allow overlapping up to 15% of the smaller image's area
         const maxAllowedOverlap = Math.min(thisArea, otherArea) * 0.15;
         return overlapArea > maxAllowedOverlap;
       });
@@ -133,6 +136,7 @@
       const maxWidth = canvasWidth - width - 10;
       const currentMaxHeight = Math.max(800, ...occupiedAreas.map(area => area.y + area.height)) + 400;
 
+      // Try to place as high and left as possible, allowing slight overlaps
       for (let y = 5; y < currentMaxHeight; y += gridSize) {
         for (let x = 5; x < maxWidth; x += gridSize) {
           if (!isOverlapping(x, y, width, height)) {
@@ -141,6 +145,7 @@
         }
       }
 
+      // Secondary pass: try with some randomization for more organic placement
       for (let attempt = 0; attempt < 20; attempt++) {
         const x = Math.random() * (maxWidth - 10) + 5;
         const y = Math.random() * currentMaxHeight + 5;
@@ -149,6 +154,7 @@
         }
       }
 
+      // Fallback: place at bottom
       const maxY = Math.max(0, ...occupiedAreas.map(area => area.y + area.height));
       return { x: 5 + Math.random() * 100, y: maxY + 10 };
     };
@@ -156,6 +162,7 @@
     sortedItems.forEach((item) => {
       const displayWidth = item.displayWidth;
       const displayHeight = item.displayHeight;
+
       const position = findBestPosition(displayWidth, displayHeight);
 
       occupiedAreas.push({ x: position.x, y: position.y, width: displayWidth, height: displayHeight });
@@ -325,7 +332,7 @@
   .irregular-collage .collage-media:hover {
     transform: none !important;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2) !important;
-    z-index: inherit !important;
+    z-index: 1000 !important;
   }
 
   .collage-image {

@@ -7,6 +7,7 @@
 
   let containerRef: HTMLDivElement;
   let imageZIndices: Record<string, number> = {};
+  let imagePositions: Record<string, {x: number, y: number}> = {};
   let nextZIndex = 100;
   let canvasSize = {
     width: Math.max((typeof window !== 'undefined' ? window.innerWidth : 1000) * 10, 10000),
@@ -25,11 +26,17 @@
     const offsetX = e.clientX - rect.left;
     const offsetY = e.clientY - rect.top;
 
+    let lastX = 0;
+    let lastY = 0;
+
     const handleMouseMove = (e: MouseEvent) => {
       const scrollLeft = container.scrollLeft;
       const scrollTop = container.scrollTop;
       const newX = e.clientX - containerRect.left + scrollLeft - offsetX;
       const newY = e.clientY - containerRect.top + scrollTop - offsetY;
+
+      lastX = newX;
+      lastY = newY;
 
       const buffer = 500;
       if (newX + buffer > canvasSize.width || newY + buffer > canvasSize.height) {
@@ -59,6 +66,7 @@
     const handleMouseUp = () => {
       const newZIndex = nextZIndex;
       imageZIndices = { ...imageZIndices, [gif.id]: newZIndex };
+      imagePositions = { ...imagePositions, [gif.id]: { x: lastX, y: lastY } };
       nextZIndex++;
       element.style.pointerEvents = 'auto';
       element.style.zIndex = newZIndex.toString();
@@ -128,7 +136,7 @@
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <div
         class="collage-item {variant === 'large' ? `large-item large-item-${index + 1}` : `stack-item stack-item-${index + 1}`}"
-        style="pointer-events: auto; z-index: {imageZIndices[gif.id] || 1};"
+        style="pointer-events: auto; z-index: {imageZIndices[gif.id] || 1};{imagePositions[gif.id] ? ` left: ${imagePositions[gif.id].x}px; top: ${imagePositions[gif.id].y}px; transform: none;` : ''}"
         on:click={(e) => handleClick(e, gif)}
         on:mousedown={(e) => variant === 'large' ? handleImageMouseDown(e, gif, index) : undefined}
       >
@@ -142,5 +150,5 @@
 </div>
 
 <style>
-.collage-container{width:100%;min-height:100vh;background:#0a1628;padding:2rem;overflow:hidden;position:relative}.collage-grid{position:relative;width:100%;max-width:1400px;margin:0 auto;height:100vh;overflow:hidden}.collage-item{position:absolute;overflow:hidden;transition:all .2s ease;cursor:pointer}.collage-image{width:100%;height:100%;object-fit:contain;display:block}.collage-overlay{position:absolute;bottom:0;left:0;right:0;background:rgba(10,22,40,.9);border-top:1px solid #3a7a8a;padding:.75rem;opacity:0;transition:opacity .2s ease;font-family:'Courier New',monospace}.collage-container:not(.large-collage) .collage-item:hover .collage-overlay{opacity:1}.collage-title{font-size:.7rem;font-weight:normal;letter-spacing:1px;text-transform:uppercase;margin:0;color:#5a9aaa;font-family:'Courier New',monospace}.large-collage{padding:0;margin:0;min-height:100vh;overflow:auto;position:fixed;top:0;left:0;width:100vw;height:100vh;background:#0a1628;z-index:1}.large-collage .collage-grid{position:relative;min-width:100vw;min-height:100vh;overflow:visible}.large-item{position:absolute!important;width:auto!important;height:auto!important;cursor:grab;transition:all .2s ease;user-select:none}.large-item .collage-image{width:auto;height:auto;object-fit:none;max-width:none;max-height:none}.large-item:active{cursor:grabbing}.large-item-1{top:5%;left:3%;transform:rotate(-1deg)}.large-item-2{top:8%;left:25%;transform:rotate(2deg)}.large-item-3{top:35%;left:8%;transform:rotate(-2deg)}.large-item-4{top:12%;left:55%;transform:rotate(1deg)}.large-item-5{top:50%;left:35%;transform:rotate(-1deg)}.large-item-6{top:25%;left:78%;transform:rotate(3deg)}.large-item-7{top:65%;left:65%;transform:rotate(-2deg)}.large-item-8{top:75%;left:15%;transform:rotate(1deg)}.stack-collage{padding:2rem;min-height:100vh;overflow-y:auto;overflow-x:hidden}.stack-collage .collage-grid{display:flex;flex-direction:column;gap:3rem;align-items:center;width:100%;padding-bottom:2rem;height:auto;overflow:visible}.stack-item{position:relative!important;width:auto!important;height:auto!important;flex-shrink:0}.stack-item .collage-image{width:auto;height:auto;object-fit:none;max-width:100vw;max-height:none;display:block}
+.collage-container{width:100%;min-height:100vh;background:#0a1628;padding:2rem;overflow:hidden;position:relative}.collage-grid{position:relative;width:100%;max-width:1400px;margin:0 auto;height:100vh;overflow:hidden}.collage-item{position:absolute;overflow:hidden;transition:all .2s ease;cursor:pointer}.collage-image{width:100%;height:100%;object-fit:contain;display:block}.collage-overlay{position:absolute;bottom:0;left:0;right:0;background:rgba(10,22,40,.9);border-top:1px solid #3a7a8a;padding:.75rem;opacity:0;transition:opacity .2s ease;font-family:'Courier New',monospace}.collage-container:not(.large-collage) .collage-item:hover .collage-overlay{opacity:1}.collage-title{font-size:.7rem;font-weight:normal;letter-spacing:1px;text-transform:uppercase;margin:0;color:#5a9aaa;font-family:'Courier New',monospace}.large-collage{padding:0;margin:0;min-height:100vh;overflow:auto;position:fixed;top:0;left:0;width:100vw;height:100vh;background:#0a1628;z-index:1}.large-collage .collage-grid{position:relative;min-width:100vw;min-height:100vh;overflow:visible}.large-item{position:absolute!important;width:auto!important;height:auto!important;cursor:grab;transition:all .2s ease;user-select:none}.large-item .collage-image{width:auto;height:auto;object-fit:none;max-width:none;max-height:none}.large-item:active{cursor:grabbing}.large-item-1{top:20px;left:20px;transform:rotate(-1deg)}.large-item-2{top:20px;left:20px;transform:rotate(2deg)}.large-item-3{top:20px;left:20px;transform:rotate(-2deg)}.large-item-4{top:20px;left:20px;transform:rotate(1deg)}.large-item-5{top:20px;left:20px;transform:rotate(-1deg)}.large-item-6{top:20px;left:20px;transform:rotate(3deg)}.large-item-7{top:20px;left:20px;transform:rotate(-2deg)}.large-item-8{top:20px;left:20px;transform:rotate(1deg)}.stack-collage{padding:2rem;min-height:100vh;overflow-y:auto;overflow-x:hidden}.stack-collage .collage-grid{display:flex;flex-direction:column;gap:3rem;align-items:center;width:100%;padding-bottom:2rem;height:auto;overflow:visible}.stack-item{position:relative!important;width:auto!important;height:auto!important;flex-shrink:0}.stack-item .collage-image{width:auto;height:auto;object-fit:none;max-width:100vw;max-height:none;display:block}
 </style>

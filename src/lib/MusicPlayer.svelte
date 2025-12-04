@@ -14,10 +14,7 @@
   export let teleportTrigger: number = 0;
   export let onPlayingChange: (playing: boolean) => void = () => {};
 
-  let position = { x: typeof window !== 'undefined' ? window.innerWidth - 180 : 800, y: 20 };
-  let hasBeenMoved = false;
-  let isDragging = false;
-  let dragStart = { x: 0, y: 0 };
+  let lastTeleportTrigger = 0;
   let playerRef: HTMLDivElement;
   let audioContext: AudioContext | null = null;
   let gainNode: GainNode | null = null;
@@ -97,7 +94,8 @@
     return path;
   };
 
-  const getViewModeSymbol = () => {
+  // Reactive symbol that updates when viewMode changes
+  $: viewModeSymbol = (() => {
     switch (viewMode) {
       case 'list': return '⧪';
       case 'stack': return '▦';
@@ -107,7 +105,7 @@
       case 'pinterest': return '☰';
       default: return '☰';
     }
-  };
+  })();
 
   // Mobile audio context activation - needed for iOS/mobile browsers
   const activateAudioContext = async (): Promise<boolean> => {
@@ -369,63 +367,6 @@
     }
   }
 
-  function handleMouseDown(e: MouseEvent) {
-    if (isMobileDevice()) return;
-    isDragging = true;
-    dragStart = { x: e.clientX - position.x, y: e.clientY - position.y };
-    e.preventDefault();
-  }
-
-  function handleMouseMove(e: MouseEvent) {
-    if (!isDragging) return;
-
-    const newX = e.clientX - dragStart.x;
-    const newY = e.clientY - dragStart.y;
-
-    const playerElement = playerRef;
-    if (playerElement) {
-      const rect = playerElement.getBoundingClientRect();
-      const maxX = window.innerWidth - rect.width;
-      const maxY = window.innerHeight - rect.height;
-
-      position = {
-        x: Math.max(-50, Math.min(newX, maxX + 50)),
-        y: Math.max(-50, Math.min(newY, maxY + 50))
-      };
-    }
-  }
-
-  function handleMouseUp() {
-    if (!isDragging) return;
-
-    isDragging = false;
-    hasBeenMoved = true;
-
-    // Dismiss if dragged far off any edge
-    const dismissThreshold = 50;
-
-    if (position.x < -dismissThreshold ||
-        position.x > window.innerWidth - dismissThreshold ||
-        position.y < -dismissThreshold ||
-        position.y > window.innerHeight - dismissThreshold) {
-      onDismiss();
-    }
-  }
-
-  function handleResize() {
-    position = {
-      ...position,
-      x: Math.min(position.x, window.innerWidth - 220)
-    };
-  }
-
-  // Teleport to mouse when teleportTrigger changes
-  $: if (teleportTrigger > 0 && mousePosition.x > 0 && !isDragging) {
-    position = {
-      x: Math.max(10, Math.min(mousePosition.x - 100, window.innerWidth - 220)),
-      y: Math.max(10, Math.min(mousePosition.y - 50, window.innerHeight - 100))
-    };
-  }
 
   // React to track and playing state changes
   $: if (currentTrack && isPlaying) {
@@ -446,9 +387,6 @@
 
   onMount(() => {
     initAudio();
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    window.addEventListener('resize', handleResize);
   });
 
   onDestroy(() => {
@@ -465,10 +403,6 @@
       audioContext.close();
       audioContext = null;
     }
-
-    document.removeEventListener('mousemove', handleMouseMove);
-    document.removeEventListener('mouseup', handleMouseUp);
-    window.removeEventListener('resize', handleResize);
   });
 </script>
 
@@ -476,10 +410,6 @@
   <div
     bind:this={playerRef}
     class="music-player"
-    class:dragging={isDragging}
-    class:positioned={hasBeenMoved}
-    style={!isMobileDevice() ? (hasBeenMoved ? `left: ${position.x}px; top: ${position.y}px;` : `top: 20px; right: 60px; left: auto;`) : ''}
-    on:mousedown={handleMouseDown}
     role="presentation"
   >
     <div class="track-list">
@@ -488,6 +418,7 @@
           class="track-item"
           class:active={currentTrack?.id === track.id && isPlaying}
           on:click={() => handleTrackClick(track)}
+          on:mousedown|stopPropagation
         >
           <span class="track-controls">
             {currentTrack?.id === track.id && isPlaying ? '■' : '▶'}
@@ -496,8 +427,8 @@
       {/each}
     </div>
     <div class="layout-toggle">
-      <button class="toggle-btn" on:click={onLayoutToggle}>
-        {getViewModeSymbol()}
+      <button class="toggle-btn" on:click={onLayoutToggle} on:mousedown|stopPropagation>
+        {viewModeSymbol}
       </button>
     </div>
   </div>
@@ -526,10 +457,6 @@
     }
   }
 
-  .music-player.dragging {
-    cursor: grabbing;
-    opacity: 0.9;
-  }
 
   .music-player:hover {
     background: #051025;
@@ -568,6 +495,10 @@
     background: #0a1628;
     opacity: 1;
     border: 1px solid #0a1628;
+  }
+
+  .track-item:focus {
+    outline: none;
   }
 
   .track-controls {
