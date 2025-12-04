@@ -113,7 +113,7 @@
       };
     });
 
-    const sortedItems = itemsWithSizes.sort((a, b) => b.area - a.area);
+    const sortedItems = shuffleArray(itemsWithSizes);
 
     const occupiedAreas: { x: number; y: number; width: number; height: number }[] = [];
 
