@@ -332,7 +332,7 @@
   .irregular-collage .collage-media:hover {
     transform: none !important;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2) !important;
-    z-index: inherit !important;
+    z-index: 1000 !important;
   }
 
   .collage-image {
