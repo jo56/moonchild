@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import type { MediaItem } from '../types';
+  import { shuffleArray } from './utils';
 
   interface Props {
     media: MediaItem[];
@@ -16,15 +17,6 @@
   let mediaWithHeights = $state<MediaWithHeight[]>([]);
   let columns = $state(3);
   let containerRef: HTMLDivElement | undefined = $state();
-
-  function shuffleArray<T>(array: T[]): T[] {
-    const shuffled = [...array];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
-  }
 
   function loadMediaHeight(mediaItem: MediaItem): Promise<number> {
     return new Promise((resolve) => {
@@ -73,10 +65,6 @@
     )
   );
 
-  function handleMediaClick(mediaItem: MediaItem) {
-    onMediaClick(mediaItem);
-  }
-
   onMount(() => {
     calculateColumns();
     loadAllMedia();
@@ -100,7 +88,7 @@
           <div
             class="pinterest-item"
             style="height: {item.height}px"
-            onclick={() => handleMediaClick(item)}
+            onclick={() => onMediaClick(item)}
           >
             <div class="pinterest-media-wrapper">
               <img
@@ -172,13 +160,6 @@
   .pinterest-item:hover .pinterest-media {
     transform: scale(1.1);
     filter: brightness(1) contrast(1.2);
-  }
-
-  @keyframes fadeInUp {
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
   }
 
   @media (max-width: 1200px) {

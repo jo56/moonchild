@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import type { MediaItem } from '../types';
+  import { shuffleArray } from './utils';
 
   export let media: MediaItem[];
   export let onMediaClick: (mediaItem: MediaItem) => void;
@@ -25,15 +26,6 @@
   let dragStart = { x: 0, y: 0 };
   let dragStartPos = { x: 0, y: 0 };
   let hasDragged = false;
-
-  function shuffleArray<T>(array: T[]): T[] {
-    const shuffled = [...array];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
-  }
 
   function loadImageDimensions(mediaItem: MediaItem): Promise<{naturalWidth: number, naturalHeight: number}> {
     return new Promise((resolve) => {

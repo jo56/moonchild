@@ -5,12 +5,11 @@
   export let index: number;
   export let onClick: () => void;
 
-  $: alignment = index % 2 === 0 ? 'left-align' : 'right-align';
   $: animationDelay = `${index * 0.5}s`;
 </script>
 
 <div
-  class="gif-container {alignment}"
+  class="gif-container"
   style="animation-delay: {animationDelay}"
 >
   <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -84,17 +83,6 @@
     margin: 0;
     color: #5a9aaa;
     font-family: 'Courier New', monospace;
-  }
-
-  @keyframes fadeInSlide {
-    from {
-      opacity: 0;
-      transform: translateY(50px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
   }
 
   @media (max-width: 768px) {

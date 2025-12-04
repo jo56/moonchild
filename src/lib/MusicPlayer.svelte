@@ -9,13 +9,7 @@
   export let isPlaying: boolean;
   export let onTrackPlay: (track: MusicTrack) => void;
   export let isVisible: boolean = true;
-  export let mousePosition: { x: number; y: number } = { x: 0, y: 0 };
-  export let onDismiss: () => void = () => {};
-  export let teleportTrigger: number = 0;
-  export let onPlayingChange: (playing: boolean) => void = () => {};
 
-  let lastTeleportTrigger = 0;
-  let playerRef: HTMLDivElement;
   let audioContext: AudioContext | null = null;
   let gainNode: GainNode | null = null;
   let sourceNode: AudioBufferSourceNode | null = null;
@@ -408,7 +402,6 @@
 
 {#if isVisible}
   <div
-    bind:this={playerRef}
     class="music-player"
     role="presentation"
   >

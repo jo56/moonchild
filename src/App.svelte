@@ -16,8 +16,6 @@
   let viewMode: 'list' | 'stack' | 'large-list' | 'pinterest' | 'irregular' | 'pics-only' = 'pinterest';
   let isInitialLoad = true;
   let isMusicPlayerVisible = true;
-  let mousePosition = { x: 0, y: 0 };
-  let teleportTrigger = 0;
   let imageRefreshKey = 0;
   let currentTrack: MusicTrack | null = null;
   let isPlaying = false;
@@ -26,10 +24,6 @@
     const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
     const progress = (window.scrollY / totalHeight) * 100;
     scrollProgress = progress;
-  }
-
-  function handleMouseMove(e: MouseEvent) {
-    mousePosition = { x: e.clientX, y: e.clientY };
   }
 
   function toggleLayout(direction: 'forward' | 'backward' = 'forward') {
@@ -58,40 +52,7 @@
     })();
 
     viewMode = nextMode;
-
-    // Scroll to top when switching to stack view
-    if (nextMode === 'stack') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    // Scroll to top when switching to list view
-    if (nextMode === 'list') {
-      setTimeout(() => {
-        document.documentElement.scrollTop = 0;
-        document.body.scrollTop = 0;
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }, 50);
-    }
-
-    // Scroll to top when switching to pinterest view
-    if (nextMode === 'pinterest') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    // Scroll to top when switching to irregular collage view
-    if (nextMode === 'irregular') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    // Scroll to top when switching to pics-only view
-    if (nextMode === 'pics-only') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    // Scroll to top when switching to large-list view
-    if (nextMode === 'large-list') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function handleKeyDown(e: KeyboardEvent) {
@@ -129,10 +90,6 @@
     openLightbox({ id: mediaItem.id, name: mediaItem.name, path: mediaItem.path });
   }
 
-  function handleMusicPlayerDismiss() {
-    isMusicPlayerVisible = false;
-  }
-
   function playTrack(track: MusicTrack) {
     if (currentTrack?.id === track.id) {
       if (isPlaying) {
@@ -147,55 +104,17 @@
     }
   }
 
-  function handlePlayingChange(playing: boolean) {
-    isPlaying = playing;
-  }
-
-  function showNextGif() {
-    if (!lightboxGif) return;
-    let currentArray: Array<GifItem | MediaItem>;
-    if (viewMode === 'pinterest' || viewMode === 'irregular') {
-      currentArray = combinedMedia;
-    } else if (viewMode === 'pics-only') {
-      currentArray = staticImages;
-    } else {
-      currentArray = gifs;
-    }
-    const currentIndex = currentArray.findIndex(g => g.id === lightboxGif!.id);
-    const nextIndex = (currentIndex + 1) % currentArray.length;
-    const nextItem = currentArray[nextIndex];
-    lightboxGif = { id: nextItem.id, name: nextItem.name, path: nextItem.path };
-  }
-
-  function showPreviousGif() {
-    if (!lightboxGif) return;
-    let currentArray: Array<GifItem | MediaItem>;
-    if (viewMode === 'pinterest' || viewMode === 'irregular') {
-      currentArray = combinedMedia;
-    } else if (viewMode === 'pics-only') {
-      currentArray = staticImages;
-    } else {
-      currentArray = gifs;
-    }
-    const currentIndex = currentArray.findIndex(g => g.id === lightboxGif!.id);
-    const previousIndex = (currentIndex - 1 + currentArray.length) % currentArray.length;
-    const prevItem = currentArray[previousIndex];
-    lightboxGif = { id: prevItem.id, name: prevItem.name, path: prevItem.path };
-  }
-
   onMount(() => {
     if (isInitialLoad) {
       window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
       isInitialLoad = false;
     }
     window.addEventListener('scroll', handleScroll);
-    document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('keydown', handleKeyDown);
   });
 
   onDestroy(() => {
     window.removeEventListener('scroll', handleScroll);
-    document.removeEventListener('mousemove', handleMouseMove);
     document.removeEventListener('keydown', handleKeyDown);
   });
 </script>
@@ -212,10 +131,6 @@
       {isPlaying}
       onTrackPlay={playTrack}
       isVisible={isMusicPlayerVisible}
-      {mousePosition}
-      onDismiss={handleMusicPlayerDismiss}
-      {teleportTrigger}
-      onPlayingChange={handlePlayingChange}
     />
 
     {#if viewMode === 'list'}
@@ -241,8 +156,8 @@
     {:else if viewMode === 'pics-only'}
       {#key imageRefreshKey}
         <section class="gallery-section">
-          {#each staticImages as image, index (image.id)}
-            <StaticImageDisplay {image} {index} onClick={() => openLightbox({ id: image.id, name: image.name, path: image.path })} />
+          {#each staticImages as image (image.id)}
+            <StaticImageDisplay {image} onClick={() => openLightbox({ id: image.id, name: image.name, path: image.path })} />
           {/each}
         </section>
       {/key}
@@ -266,7 +181,5 @@
     gif={lightboxGif}
     isOpen={isLightboxOpen}
     onClose={closeLightbox}
-    onNext={showNextGif}
-    onPrevious={showPreviousGif}
   />
 </div>

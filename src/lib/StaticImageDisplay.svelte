@@ -1,14 +1,11 @@
 <script lang="ts">
   export let image: { id: string; name: string; path: string };
-  export let index: number;
   export let onClick: () => void;
-
-  $: alignment = index % 2 === 0 ? 'left-align' : 'right-align';
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<div class="gif-container {alignment}">
+<div class="gif-container">
   <div class="gif-wrapper" on:click={onClick}>
     <img
       src={image.path}
@@ -48,17 +45,6 @@
     max-height: 80vh;
     display: block;
     object-fit: contain;
-  }
-
-  @keyframes fadeInSlide {
-    from {
-      opacity: 0;
-      transform: translateY(50px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
   }
 
   @media (max-width: 768px) {

@@ -5,8 +5,6 @@
   export let gif: GifItem | null;
   export let isOpen: boolean;
   export let onClose: () => void;
-  export let onNext: (() => void) | undefined = undefined;
-  export let onPrevious: (() => void) | undefined = undefined;
 
   let isZoomed = false;
   let isDragging = false;
