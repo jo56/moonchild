@@ -13,7 +13,8 @@
   let scrollProgress = 0;
   let lightboxGif: GifItem | null = null;
   let isLightboxOpen = false;
-  let viewMode: 'list' | 'stack' | 'large-list' | 'pinterest' | 'irregular' | 'pics-only' = 'pinterest';
+  let viewMode: 'list' | 'stack' | 'large-list' | 'pinterest' | 'irregular' | 'pics-only' =
+    'pinterest';
   let isInitialLoad = true;
   let isMusicPlayerVisible = true;
   let imageRefreshKey = 0;
@@ -30,23 +31,37 @@
     const nextMode = (() => {
       if (direction === 'backward') {
         switch (viewMode) {
-          case 'list': return 'pinterest';
-          case 'stack': return 'list';
-          case 'irregular': return 'stack';
-          case 'pics-only': return 'irregular';
-          case 'large-list': return 'pics-only';
-          case 'pinterest': return 'large-list';
-          default: return 'list';
+          case 'list':
+            return 'pinterest';
+          case 'stack':
+            return 'list';
+          case 'irregular':
+            return 'stack';
+          case 'pics-only':
+            return 'irregular';
+          case 'large-list':
+            return 'pics-only';
+          case 'pinterest':
+            return 'large-list';
+          default:
+            return 'list';
         }
       } else {
         switch (viewMode) {
-          case 'list': return 'stack';
-          case 'stack': return 'irregular';
-          case 'irregular': return 'pics-only';
-          case 'pics-only': return 'large-list';
-          case 'large-list': return 'pinterest';
-          case 'pinterest': return 'list';
-          default: return 'list';
+          case 'list':
+            return 'stack';
+          case 'stack':
+            return 'irregular';
+          case 'irregular':
+            return 'pics-only';
+          case 'pics-only':
+            return 'large-list';
+          case 'large-list':
+            return 'pinterest';
+          case 'pinterest':
+            return 'list';
+          default:
+            return 'list';
         }
       }
     })();
@@ -143,7 +158,7 @@
       {/key}
     {:else if viewMode === 'stack'}
       {#key imageRefreshKey}
-        <CollageView gifs={gifs} onGifClick={openLightbox} variant="large" />
+        <CollageView {gifs} onGifClick={openLightbox} variant="large" />
       {/key}
     {:else if viewMode === 'pinterest'}
       {#key imageRefreshKey}
@@ -157,13 +172,16 @@
       {#key imageRefreshKey}
         <section class="gallery-section">
           {#each staticImages as image (image.id)}
-            <StaticImageDisplay {image} onClick={() => openLightbox({ id: image.id, name: image.name, path: image.path })} />
+            <StaticImageDisplay
+              {image}
+              onClick={() => openLightbox({ id: image.id, name: image.name, path: image.path })}
+            />
           {/each}
         </section>
       {/key}
     {:else if viewMode === 'large-list'}
       {#key imageRefreshKey}
-        <CollageView gifs={gifs} onGifClick={openLightbox} variant="stack" />
+        <CollageView {gifs} onGifClick={openLightbox} variant="stack" />
       {/key}
     {/if}
   </main>
@@ -177,9 +195,5 @@
     </div>
   {/if}
 
-  <Lightbox
-    gif={lightboxGif}
-    isOpen={isLightboxOpen}
-    onClose={closeLightbox}
-  />
+  <Lightbox gif={lightboxGif} isOpen={isLightboxOpen} onClose={closeLightbox} />
 </div>

@@ -1,3 +1,35 @@
+/* CSS Variables */
+:root {
+  /* Colors */
+  --color-bg-primary: #0a1628;
+  --color-bg-secondary: #051025;
+  --color-bg-overlay: rgba(10, 22, 40, 0.9);
+  --color-accent: #06b6d4;
+  --color-accent-secondary: #3a7a8a;
+  --color-text-primary: #fff;
+  --color-text-secondary: #5a9aaa;
+  --color-glow: #00ffff;
+
+  /* Shadows */
+  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2);
+  --shadow-card-hover: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --shadow-elevated: 0 20px 40px rgba(0, 0, 0, 0.4);
+  --shadow-glow: 0 0 4px var(--color-glow);
+
+  /* Z-Index Scale */
+  --z-background: 0;
+  --z-content: 1;
+  --z-collage: 10;
+  --z-player: 1000;
+  --z-player-controls: 1001;
+  --z-lightbox: 2000;
+
+  /* Transitions */
+  --transition-fast: 0.2s ease;
+  --transition-medium: 0.3s ease;
+  --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 /* Global Resets */
 * {
   margin: 0;
@@ -6,9 +38,9 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
+    'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background: #000;
@@ -40,13 +72,13 @@ html {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #0a1628;
+  background: var(--color-bg-primary);
   border-radius: 2px;
   border: 1px solid rgba(10, 22, 40, 0.5);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #0a1628;
+  background: var(--color-bg-primary);
   border: 1px solid rgba(6, 182, 212, 0.3);
   opacity: 0.8;
 }
@@ -59,7 +91,7 @@ html {
 .app {
   position: relative;
   min-height: 100vh;
-  background: #0a1628;
+  background: var(--color-bg-primary);
   overflow-x: hidden;
   width: 100%;
 }
@@ -69,8 +101,8 @@ html {
   top: 0;
   left: 0;
   height: 2px;
-  background: #3a7a8a;
-  z-index: 1001;
+  background: var(--color-accent-secondary);
+  z-index: var(--z-player-controls);
   transition: width 0.1s ease;
 }
 
@@ -99,9 +131,9 @@ html {
   position: absolute;
   width: 1px;
   height: 1px;
-  background: #00ffff;
+  background: var(--color-glow);
   border-radius: 50%;
-  box-shadow: 0 0 4px #00ffff;
+  box-shadow: var(--shadow-glow);
   animation: float 20s infinite linear;
   opacity: 0;
   animation-delay: 2s;

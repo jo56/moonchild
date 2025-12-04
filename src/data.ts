@@ -8,7 +8,7 @@ export const gifs: GifItem[] = [
   { id: '5', name: 'Spread 2', path: 'gifs/5-spread 2.gif' },
   { id: '6', name: 'Breathe', path: 'gifs/6-grand spread.gif' },
   { id: '7', name: 'Heartbeat', path: 'gifs/7-heartbeat.gif' },
-  { id: '8', name: 'Crush', path: 'gifs/8-crush.gif' },
+  { id: '8', name: 'Crush', path: 'gifs/8-crush.gif' }
 ];
 
 export const staticImages = [
@@ -30,17 +30,17 @@ export const staticImages = [
   { id: 'img17', name: 'Reflection', path: 'pics/download (83).png' },
   { id: 'img18', name: 'Harmony', path: 'pics/download (84).png' },
   { id: 'img19', name: 'Perfect Square', path: 'pics/download (85) square.png' },
-  { id: 'img20', name: 'Infinite Loop', path: 'pics/download (86).png' },
+  { id: 'img20', name: 'Infinite Loop', path: 'pics/download (86).png' }
 ];
 
 export const combinedMedia: MediaItem[] = [
-  ...gifs.map(gif => ({ ...gif, type: 'gif' as const })),
-  ...staticImages.map(img => ({ ...img, type: 'image' as const }))
+  ...gifs.map((gif) => ({ ...gif, type: 'gif' as const })),
+  ...staticImages.map((img) => ({ ...img, type: 'image' as const }))
 ];
 
 export const musicTracks: MusicTrack[] = [
   { id: '1', name: '005_1', path: 'music/005_1_4.ogg' },
   { id: '2', name: '068_1', path: 'music/068_1_looped.ogg' },
   { id: '3', name: '02425_1', path: 'music/02425_1_louder.ogg' },
-  { id: '4', name: '075_1', path: 'music/075_1.ogg' },
+  { id: '4', name: '075_1', path: 'music/075_1.ogg' }
 ];

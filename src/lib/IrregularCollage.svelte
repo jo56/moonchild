@@ -3,8 +3,12 @@
   import type { MediaItem } from '../types';
   import { shuffleArray } from './utils';
 
-  export let media: MediaItem[];
-  export let onMediaClick: (mediaItem: MediaItem) => void;
+  interface Props {
+    media: MediaItem[];
+    onMediaClick: (mediaItem: MediaItem) => void;
+  }
+
+  let { media, onMediaClick }: Props = $props();
 
   interface PositionedMedia extends MediaItem {
     x: number;
@@ -18,16 +22,18 @@
     loaded: boolean;
   }
 
-  let positionedMedia: PositionedMedia[] = [];
-  let containerHeight = 3000;
-  let containerWidth = 3000;
-  let viewportOffset = { x: 0, y: 0 };
-  let isDragging = false;
+  let positionedMedia = $state<PositionedMedia[]>([]);
+  let containerHeight = $state(3000);
+  let containerWidth = $state(3000);
+  let viewportOffset = $state({ x: 0, y: 0 });
+  let isDragging = $state(false);
   let dragStart = { x: 0, y: 0 };
   let dragStartPos = { x: 0, y: 0 };
   let hasDragged = false;
 
-  function loadImageDimensions(mediaItem: MediaItem): Promise<{naturalWidth: number, naturalHeight: number}> {
+  function loadImageDimensions(
+    mediaItem: MediaItem
+  ): Promise<{ naturalWidth: number; naturalHeight: number }> {
     return new Promise((resolve) => {
       const img = new Image();
       img.onload = () => {
@@ -52,7 +58,7 @@
       })
     );
 
-    const itemsWithSizes = mediaWithDimensions.map(item => {
+    const itemsWithSizes = mediaWithDimensions.map((item) => {
       const aspectRatio = item.naturalWidth / item.naturalHeight;
       let displayWidth, displayHeight;
 
@@ -110,9 +116,15 @@
     const occupiedAreas: { x: number; y: number; width: number; height: number }[] = [];
 
     const isOverlapping = (x: number, y: number, width: number, height: number) => {
-      return occupiedAreas.some(area => {
-        const overlapX = Math.max(0, Math.min(x + width, area.x + area.width) - Math.max(x, area.x));
-        const overlapY = Math.max(0, Math.min(y + height, area.y + area.height) - Math.max(y, area.y));
+      return occupiedAreas.some((area) => {
+        const overlapX = Math.max(
+          0,
+          Math.min(x + width, area.x + area.width) - Math.max(x, area.x)
+        );
+        const overlapY = Math.max(
+          0,
+          Math.min(y + height, area.y + area.height) - Math.max(y, area.y)
+        );
         const overlapArea = overlapX * overlapY;
         const thisArea = width * height;
         const otherArea = area.width * area.height;
@@ -126,7 +138,8 @@
     const findBestPosition = (width: number, height: number) => {
       const gridSize = 15;
       const maxWidth = canvasWidth - width - 10;
-      const currentMaxHeight = Math.max(800, ...occupiedAreas.map(area => area.y + area.height)) + 400;
+      const currentMaxHeight =
+        Math.max(800, ...occupiedAreas.map((area) => area.y + area.height)) + 400;
 
       // Try to place as high and left as possible, allowing slight overlaps
       for (let y = 5; y < currentMaxHeight; y += gridSize) {
@@ -147,7 +160,7 @@
       }
 
       // Fallback: place at bottom
-      const maxY = Math.max(0, ...occupiedAreas.map(area => area.y + area.height));
+      const maxY = Math.max(0, ...occupiedAreas.map((area) => area.y + area.height));
       return { x: 5 + Math.random() * 100, y: maxY + 10 };
     };
 
@@ -157,7 +170,12 @@
 
       const position = findBestPosition(displayWidth, displayHeight);
 
-      occupiedAreas.push({ x: position.x, y: position.y, width: displayWidth, height: displayHeight });
+      occupiedAreas.push({
+        x: position.x,
+        y: position.y,
+        width: displayWidth,
+        height: displayHeight
+      });
 
       positions.push({
         ...item,
@@ -171,8 +189,8 @@
       });
     });
 
-    const maxY = Math.max(...positions.map(p => p.y + p.height));
-    const maxX = Math.max(...positions.map(p => p.x + p.width));
+    const maxY = Math.max(...positions.map((p) => p.y + p.height));
+    const maxX = Math.max(...positions.map((p) => p.x + p.width));
     containerHeight = maxY + 50;
     containerWidth = Math.max(maxX + 50, window.innerWidth);
 
@@ -229,7 +247,7 @@
   let handleResize: () => Promise<void>;
 
   onMount(() => {
-    generatePositions().then(positions => {
+    generatePositions().then((positions) => {
       positionedMedia = positions;
     });
 
@@ -252,37 +270,38 @@
     document.body.style.cursor = '';
   });
 
-  $: if (isDragging) {
-    document.body.style.cursor = 'grabbing';
-  } else {
-    document.body.style.cursor = '';
-  }
+  $effect(() => {
+    if (isDragging) {
+      document.body.style.cursor = 'grabbing';
+    } else {
+      document.body.style.cursor = '';
+    }
+  });
 </script>
 
 <div class="irregular-collage-viewport">
-  <!-- svelte-ignore a11y-no-static-element-interactions -->
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
     class="irregular-collage"
-    style="height: {containerHeight}px; width: {containerWidth}px; transform: translate({viewportOffset.x}px, {viewportOffset.y}px); cursor: {isDragging ? 'grabbing' : 'grab'}"
-    on:mousedown={handleMouseDown}
-    on:contextmenu={handleContextMenu}
+    style="height: {containerHeight}px; width: {containerWidth}px; transform: translate({viewportOffset.x}px, {viewportOffset.y}px); cursor: {isDragging
+      ? 'grabbing'
+      : 'grab'}"
+    onmousedown={handleMouseDown}
+    oncontextmenu={handleContextMenu}
+    role="presentation"
   >
     {#each positionedMedia as item (item.id)}
-      <!-- svelte-ignore a11y-click-events-have-key-events -->
-      <!-- svelte-ignore a11y-no-static-element-interactions -->
+      <!-- svelte-ignore a11y_click_events_have_key_events -->
+      <!-- svelte-ignore a11y_no_static_element_interactions -->
       <div
         class="collage-media {item.type === 'gif' ? 'is-gif' : 'is-image'}"
         style="position: absolute; left: {item.x}px; top: {item.y}px; width: {item.width}px; height: {item.height}px; z-index: {item.zIndex}; opacity: 1"
-        on:mousedown={handleMouseDown}
-        on:click={(e) => handleMediaClick(e, item)}
+        onmousedown={handleMouseDown}
+        onclick={(e) => handleMediaClick(e, item)}
+        role="button"
+        tabindex="0"
       >
-        <img
-          src={item.path}
-          alt=""
-          class="collage-image"
-          loading="lazy"
-          draggable={false}
-        />
+        <img src={item.path} alt="" class="collage-image" loading="lazy" draggable={false} />
         <div class="collage-overlay">
           <div class="media-type-badge">{item.type.toUpperCase()}</div>
         </div>
@@ -297,7 +316,7 @@
     height: 100vh;
     overflow: auto;
     position: relative;
-    background: #0a1628;
+    background: var(--color-bg-primary);
   }
 
   .irregular-collage {
@@ -314,17 +333,17 @@
 
   .collage-media {
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all var(--transition-smooth);
     border-radius: 0;
     overflow: hidden;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-card);
     border: none;
   }
 
   .irregular-collage .collage-media:hover {
-    transform: none !important;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2) !important;
-    z-index: 1000 !important;
+    transform: none;
+    box-shadow: var(--shadow-card);
+    z-index: var(--z-player);
   }
 
   .collage-image {
@@ -332,12 +351,12 @@
     height: 100%;
     object-fit: contain;
     display: block;
-    transition: all 0.3s ease;
+    transition: all var(--transition-medium);
     filter: brightness(0.95) contrast(1.1);
   }
 
   .irregular-collage .collage-media:hover .collage-image {
-    filter: brightness(0.95) contrast(1.1) !important;
+    filter: brightness(0.95) contrast(1.1);
   }
 
   .collage-overlay {
@@ -353,7 +372,7 @@
       rgba(0, 0, 0, 0.4) 100%
     );
     opacity: 0;
-    transition: opacity 0.3s ease;
+    transition: opacity var(--transition-medium);
     display: flex;
     align-items: flex-end;
     justify-content: flex-start;
@@ -361,7 +380,7 @@
   }
 
   .irregular-collage .collage-media:hover .collage-overlay {
-    opacity: 0 !important;
+    opacity: 0;
   }
 
   .media-type-badge {
@@ -375,11 +394,11 @@
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.2);
     transform: translateY(10px);
-    transition: transform 0.3s ease 0.1s;
+    transition: transform var(--transition-medium) 0.1s;
   }
 
   .irregular-collage .collage-media:hover .media-type-badge {
-    transform: translateY(10px) !important;
+    transform: translateY(10px);
   }
 
   .is-gif .media-type-badge {

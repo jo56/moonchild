@@ -1,18 +1,17 @@
 <script lang="ts">
-  export let image: { id: string; name: string; path: string };
-  export let onClick: () => void;
+  interface Props {
+    image: { id: string; name: string; path: string };
+    onClick: () => void;
+  }
+
+  let { image, onClick }: Props = $props();
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="gif-container">
   <div class="gif-wrapper" on:click={onClick}>
-    <img
-      src={image.path}
-      alt=""
-      class="gif-image"
-      loading="lazy"
-    />
+    <img src={image.path} alt="" class="gif-image" loading="lazy" />
   </div>
 </div>
 
@@ -27,14 +26,14 @@
     position: relative;
     opacity: 0;
     animation: fadeInSlide 1s ease-out forwards;
-    background: #0a1628;
+    background: var(--color-bg-primary);
   }
 
   .gif-wrapper {
     position: relative;
     border-radius: 2px;
     overflow: hidden;
-    background: #0a1628;
+    background: var(--color-bg-primary);
     cursor: pointer;
   }
 
@@ -50,7 +49,7 @@
   @media (max-width: 768px) {
     .gif-container {
       padding: 1rem;
-      justify-content: center !important;
+      justify-content: center;
     }
 
     .gif-wrapper {

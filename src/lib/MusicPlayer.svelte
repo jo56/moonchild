@@ -2,13 +2,25 @@
   import { onMount, onDestroy } from 'svelte';
   import type { MusicTrack } from '../types';
 
-  export let tracks: MusicTrack[];
-  export let onLayoutToggle: () => void;
-  export let viewMode: 'list' | 'stack' | 'large-list' | 'pinterest' | 'irregular' | 'pics-only';
-  export let currentTrack: MusicTrack | null;
-  export let isPlaying: boolean;
-  export let onTrackPlay: (track: MusicTrack) => void;
-  export let isVisible: boolean = true;
+  interface Props {
+    tracks: MusicTrack[];
+    onLayoutToggle: () => void;
+    viewMode: 'list' | 'stack' | 'large-list' | 'pinterest' | 'irregular' | 'pics-only';
+    currentTrack: MusicTrack | null;
+    isPlaying: boolean;
+    onTrackPlay: (track: MusicTrack) => void;
+    isVisible?: boolean;
+  }
+
+  let {
+    tracks,
+    onLayoutToggle,
+    viewMode,
+    currentTrack,
+    isPlaying,
+    onTrackPlay,
+    isVisible = true
+  }: Props = $props();
 
   let audioContext: AudioContext | null = null;
   let gainNode: GainNode | null = null;
@@ -24,39 +36,21 @@
     const mobileRegex = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
     const isMobile = mobileRegex.test(navigator.userAgent);
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-
-    if (isMobile || isTouchDevice) {
-      console.log('Mobile device detected:', {
-        userAgent: navigator.userAgent,
-        isMobile,
-        isTouchDevice,
-        maxTouchPoints: navigator.maxTouchPoints,
-        platform: navigator.platform,
-        screenWidth: screen.width,
-        windowWidth: window.innerWidth
-      });
-    }
-
     return isMobile || isTouchDevice;
   };
 
-  // Enhanced error logging for mobile debugging
+  // Store last error for debugging (accessible via window.lastMobileAudioError)
   const logMobileAudioError = (context: string, error: any, additionalInfo?: any) => {
-    const errorInfo = {
-      context,
-      error: error.message || error,
-      errorType: error.constructor?.name,
-      isMobile: isMobileDevice(),
-      audioContextState: audioContext?.state,
-      userAgent: navigator.userAgent,
-      timestamp: new Date().toISOString(),
-      ...additionalInfo
-    };
-
-    console.error('Mobile Audio Error:', errorInfo);
-
     if (typeof window !== 'undefined') {
-      (window as any).lastMobileAudioError = errorInfo;
+      (window as any).lastMobileAudioError = {
+        context,
+        error: error.message || error,
+        errorType: error.constructor?.name,
+        isMobile: isMobileDevice(),
+        audioContextState: audioContext?.state,
+        timestamp: new Date().toISOString(),
+        ...additionalInfo
+      };
     }
   };
 
@@ -89,17 +83,26 @@
   };
 
   // Reactive symbol that updates when viewMode changes
-  $: viewModeSymbol = (() => {
-    switch (viewMode) {
-      case 'list': return '⧪';
-      case 'stack': return '▦';
-      case 'large-list': return '◈';
-      case 'irregular': return '⧻';
-      case 'pics-only': return '⧮';
-      case 'pinterest': return '☰';
-      default: return '☰';
-    }
-  })();
+  let viewModeSymbol = $derived(
+    (() => {
+      switch (viewMode) {
+        case 'list':
+          return '⧪';
+        case 'stack':
+          return '▦';
+        case 'large-list':
+          return '◈';
+        case 'irregular':
+          return '⧻';
+        case 'pics-only':
+          return '⧮';
+        case 'pinterest':
+          return '☰';
+        default:
+          return '☰';
+      }
+    })()
+  );
 
   // Mobile audio context activation - needed for iOS/mobile browsers
   const activateAudioContext = async (): Promise<boolean> => {
@@ -115,14 +118,7 @@
         await audioContext.resume();
       }
 
-      const isRunning = audioContext.state === 'running';
-      console.log('AudioContext activation result:', {
-        state: audioContext.state,
-        isRunning,
-        isMobile: isMobileDevice()
-      });
-
-      return isRunning;
+      return audioContext.state === 'running';
     } catch (error) {
       logMobileAudioError('AudioContext activation', error);
       return false;
@@ -144,7 +140,6 @@
     audio.load();
 
     preloadedAudioCache.set(audioPath, audio);
-    console.log(`Preloading mobile audio: ${audioPath}`);
   };
 
   // Preload track for Web Audio API
@@ -153,12 +148,10 @@
     if (audioBufferCache.has(audioPath)) return;
 
     if (!checkAudioSupport(audioPath)) {
-      console.warn(`Browser does not support audio format for ${audioPath}`);
       return;
     }
 
     try {
-      console.log(`Preloading track: ${audioPath}`);
       const response = await fetch(audioPath);
 
       if (!response.ok) {
@@ -166,18 +159,10 @@
       }
 
       const arrayBuffer = await response.arrayBuffer();
-      console.log(`Fetched ${arrayBuffer.byteLength} bytes for ${audioPath}`);
-
       const decodedBuffer = await audioContext!.decodeAudioData(arrayBuffer);
-      console.log(`Successfully decoded audio for ${audioPath}, duration: ${decodedBuffer.duration}s`);
-
       audioBufferCache.set(audioPath, decodedBuffer);
     } catch (error) {
       logMobileAudioError('preloading', error, { audioPath, trackName: track.name });
-
-      if (error instanceof DOMException && error.name === 'NotSupportedError') {
-        console.error('This audio format is not supported on this device. Consider using MP3 or AAC format for mobile compatibility.');
-      }
     }
   };
 
@@ -186,7 +171,7 @@
 
     if (isMobile) {
       // For mobile, preload HTML5 audio elements
-      tracks.forEach(track => preloadMobileAudio(track));
+      tracks.forEach((track) => preloadMobileAudio(track));
     } else {
       // For desktop, preload Web Audio API buffers
       try {
@@ -197,10 +182,9 @@
           gainNode.gain.value = volume;
         }
 
-        const preloadPromises = tracks.map(track => preloadTrack(track));
+        const preloadPromises = tracks.map((track) => preloadTrack(track));
         await Promise.all(preloadPromises);
-      } catch (err) {
-        console.warn('Web Audio API not available, using fallback:', err);
+      } catch {
         useFallbackAudio = true;
       }
     }
@@ -235,7 +219,6 @@
       });
 
       await audio.play();
-      console.log('Fallback HTML5 audio started successfully');
       return true;
     } catch (error) {
       logMobileAudioError('fallback audio playback', error, { audioPath });
@@ -278,9 +261,7 @@
       try {
         await audio.play();
         fallbackAudio = audio;
-        console.log('Mobile HTML5 audio started successfully');
-      } catch (err) {
-        console.error('Mobile audio failed:', err);
+      } catch {
         await playFallbackAudio(audioPath);
       }
     } else {
@@ -290,7 +271,6 @@
         const success = await activateAudioContext();
 
         if (!success) {
-          console.warn('AudioContext activation failed, switching to fallback');
           useFallbackAudio = true;
           await playFallbackAudio(audioPath);
           return;
@@ -317,10 +297,8 @@
 
   async function handleTrackClick(track: MusicTrack) {
     const audioPath = getMobileAudioPath(track.path);
-    console.log(`Track clicked: ${track.name} (${audioPath})`);
 
     if (isMobileDevice()) {
-      console.log('Mobile device detected, using preloaded HTML5 audio');
       useFallbackAudio = true;
 
       try {
@@ -329,7 +307,6 @@
         let audio = preloadedAudioCache.get(audioPath);
 
         if (!audio) {
-          console.log('Audio not preloaded, creating new one');
           audio = new Audio(audioPath);
           audio.loop = true;
           audio.volume = volume;
@@ -341,12 +318,9 @@
 
         await audio.play();
         fallbackAudio = audio;
-
-        console.log('Mobile HTML5 audio started successfully');
         onTrackPlay(track);
         return;
-      } catch (error) {
-        console.error('Mobile audio failed:', error);
+      } catch {
         alert('Unable to play audio. Please ensure your browser allows audio playback.');
         return;
       }
@@ -356,28 +330,29 @@
     try {
       await activateAudioContext();
       onTrackPlay(track);
-    } catch (error) {
-      console.error('Desktop audio failed:', error);
+    } catch {
+      // Audio activation failed silently
     }
   }
 
-
   // React to track and playing state changes
-  $: if (currentTrack && isPlaying) {
-    playTrack(currentTrack);
-  } else if (!isPlaying) {
-    stopPlayback();
-  }
+  $effect(() => {
+    if (currentTrack && isPlaying) {
+      playTrack(currentTrack);
+    } else if (!isPlaying) {
+      stopPlayback();
+    }
+  });
 
   // Update volume on audio elements
-  $: {
+  $effect(() => {
     if (gainNode) {
       gainNode.gain.value = volume;
     }
     if (fallbackAudio) {
       fallbackAudio.volume = volume;
     }
-  }
+  });
 
   onMount(() => {
     initAudio();
@@ -401,10 +376,7 @@
 </script>
 
 {#if isVisible}
-  <div
-    class="music-player"
-    role="presentation"
-  >
+  <div class="music-player" role="presentation">
     <div class="track-list">
       {#each tracks as track}
         <button
@@ -431,11 +403,11 @@
   .music-player {
     position: fixed;
     width: 110px;
-    background: #051025;
+    background: var(--color-bg-secondary);
     border: none;
     border-radius: 0;
     padding: 4px;
-    z-index: 1000;
+    z-index: var(--z-player);
     font-family: 'Courier New', monospace;
     cursor: default;
     user-select: none;
@@ -446,13 +418,11 @@
       position: fixed;
       top: 20px;
       right: 60px;
-      left: auto !important;
     }
   }
 
-
   .music-player:hover {
-    background: #051025;
+    background: var(--color-bg-secondary);
   }
 
   .track-list {
@@ -469,14 +439,14 @@
     align-items: center;
     width: 50px;
     height: 32px;
-    background: #0a1628;
+    background: var(--color-bg-primary);
     border: none;
     border-radius: 0;
     cursor: pointer;
-    transition: opacity 0.2s ease;
+    transition: opacity var(--transition-fast);
     font-size: 16px;
-    color: #06B6D4;
-    z-index: 1001;
+    color: var(--color-accent);
+    z-index: var(--z-player-controls);
     position: relative;
   }
 
@@ -485,9 +455,9 @@
   }
 
   .track-item.active {
-    background: #0a1628;
+    background: var(--color-bg-primary);
     opacity: 1;
-    border: 1px solid #0a1628;
+    border: 1px solid var(--color-bg-primary);
   }
 
   .track-item:focus {
@@ -496,7 +466,7 @@
 
   .track-controls {
     font-size: 14px;
-    color: #06B6D4;
+    color: var(--color-accent);
     font-weight: bold;
   }
 
@@ -510,14 +480,14 @@
   .toggle-btn {
     width: 102px;
     height: 32px;
-    background: #0a1628;
+    background: var(--color-bg-primary);
     border: none;
     border-radius: 0;
-    color: #06B6D4;
+    color: var(--color-accent);
     font-size: 18px;
     font-family: 'Courier New', monospace;
     cursor: pointer;
-    transition: opacity 0.2s ease;
+    transition: opacity var(--transition-fast);
     font-weight: bold;
     display: flex;
     justify-content: center;
@@ -535,18 +505,18 @@
 
   @media (max-width: 768px) {
     .music-player {
-      position: relative !important;
-      top: auto !important;
-      left: 50% !important;
-      right: auto !important;
-      transform: translateX(-50%) !important;
+      position: relative;
+      top: auto;
+      left: 50%;
+      right: auto;
+      transform: translateX(-50%);
       width: 160px;
-      margin: 20px 0 30px 0 !important;
-      display: block !important;
+      margin: 20px 0 30px 0;
+      display: block;
       padding: 8px;
-      z-index: 1000;
-      overflow: visible !important;
-      background: #051025 !important;
+      z-index: var(--z-player);
+      overflow: visible;
+      background: var(--color-bg-secondary);
     }
 
     .track-list {
@@ -561,9 +531,9 @@
     }
 
     .layout-toggle {
-      display: block !important;
-      margin-bottom: 0 !important;
-      width: 100% !important;
+      display: block;
+      margin-bottom: 0;
+      width: 100%;
     }
 
     .toggle-btn {
@@ -571,11 +541,11 @@
       height: 36px;
       font-size: 20px;
       outline: none;
-      display: flex !important;
-      justify-content: center !important;
-      align-items: center !important;
-      visibility: visible !important;
-      opacity: 1 !important;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      visibility: visible;
+      opacity: 1;
     }
   }
 </style>

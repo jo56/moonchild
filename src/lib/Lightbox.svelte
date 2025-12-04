@@ -2,30 +2,38 @@
   import { onMount, onDestroy } from 'svelte';
   import type { GifItem } from '../types';
 
-  export let gif: GifItem | null;
-  export let isOpen: boolean;
-  export let onClose: () => void;
+  interface Props {
+    gif: GifItem | null;
+    isOpen: boolean;
+    onClose: () => void;
+  }
 
-  let isZoomed = false;
-  let isDragging = false;
-  let imagePosition = { x: 0, y: 0 };
-  let imageRef: HTMLImageElement | null = null;
+  let { gif, isOpen, onClose }: Props = $props();
+
+  let isZoomed = $state(false);
+  let isDragging = $state(false);
+  let imagePosition = $state({ x: 0, y: 0 });
+  let imageRef = $state<HTMLImageElement | null>(null);
   let dragStart = { x: 0, y: 0 };
   let imagePositionRef = { x: 0, y: 0 };
 
   // Reset zoom when gif changes
-  $: if (gif) {
-    isZoomed = false;
-    imagePosition = { x: 0, y: 0 };
-    imagePositionRef = { x: 0, y: 0 };
-  }
+  $effect(() => {
+    if (gif) {
+      isZoomed = false;
+      imagePosition = { x: 0, y: 0 };
+      imagePositionRef = { x: 0, y: 0 };
+    }
+  });
 
   // Handle body overflow
-  $: if (isOpen) {
-    document.body.style.overflow = 'hidden';
-  } else {
-    document.body.style.overflow = '';
-  }
+  $effect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+  });
 
   function handleKeyDown(e: KeyboardEvent) {
     if (!isOpen) return;
@@ -115,7 +123,9 @@
           class:dragging={isDragging}
           on:mousedown={handleMouseDown}
           style="cursor: {isZoomed ? (isDragging ? 'grabbing' : 'grab') : 'zoom-in'};
-                 transform: {isZoomed ? `scale(2) translate(${imagePosition.x / 2}px, ${imagePosition.y / 2}px)` : 'scale(1)'};
+                 transform: {isZoomed
+            ? `scale(2) translate(${imagePosition.x / 2}px, ${imagePosition.y / 2}px)`
+            : 'scale(1)'};
                  will-change: {isDragging ? 'transform' : 'auto'};"
         />
       </div>
@@ -135,7 +145,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 2000;
+    z-index: var(--z-lightbox);
     animation: fadeIn 0.3s ease-out;
   }
 

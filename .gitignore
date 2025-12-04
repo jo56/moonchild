@@ -55,6 +55,15 @@ coverage/
 # Misc
 *.local
 .cache/
+.temp/
+tmp/
+
+# Deployment
+.vercel/
+.netlify/
+
+# Prettier
+.prettiercache
 
 # Claude Code
 .claude/

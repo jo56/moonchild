@@ -91,12 +91,7 @@
             onclick={() => onMediaClick(item)}
           >
             <div class="pinterest-media-wrapper">
-              <img
-                src={item.path}
-                alt=""
-                class="pinterest-media"
-                loading="lazy"
-              />
+              <img src={item.path} alt="" class="pinterest-media" loading="lazy" />
             </div>
           </div>
         {/each}
@@ -133,13 +128,13 @@
     overflow: hidden;
     cursor: pointer;
     opacity: 1;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    transition: all var(--transition-smooth);
+    box-shadow: var(--shadow-card-hover);
   }
 
   .pinterest-item:hover {
     transform: translateY(-8px) scale(1.02);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    box-shadow: var(--shadow-elevated);
   }
 
   .pinterest-media-wrapper {
