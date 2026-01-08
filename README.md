@@ -12,7 +12,7 @@
 
 <br>
 
-Audiovisual project based on images from [*Conway's Game of Life*](https://github.com/jo56/conways-game-of-life). These were all taken as steps of legitimate large simulations playing out over the grid, with some combined as frames of animation to create GIFs. 
+Audiovisual project based on images from [Conway's Game of Life.](https://github.com/jo56/conways-game-of-life) These images were all taken as steps of legitimate large simulations playing out over the grid, with some combined as frames of animation to create GIFs. 
 Accompanied with an original guitar soundtrack.
 
 ### Controls
